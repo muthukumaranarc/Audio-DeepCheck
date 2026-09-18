@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: audio-deepcheck-backend
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 30MB
+      enabled: true
+  data:
+    mongodb:
+      uri: ${DATABASE_URI:${MONGODB_URI:mongodb://localhost:27017/audio_deepcheck}}
+      database: ${DATABASE_NAME:audio_deepcheck}
+      auto-index-creation: true
+
+ai:
+  service:
+    base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+    connect-timeout-ms: ${AI_SERVICE_CONNECT_TIMEOUT_MS:5000}
+    read-timeout-ms: ${AI_SERVICE_READ_TIMEOUT_MS:60000}
+    analyze-timeout-ms: ${AI_SERVICE_ANALYZE_TIMEOUT_MS:65000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

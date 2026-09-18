@@ -1,0 +1,54 @@
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Model weights & Hugging Face cache
+models/huggingface/
+models/wav2vec2/*
+!models/wav2vec2/.gitkeep
+models/df_arena/*
+!models/df_arena/.gitkeep
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+
+# Data and audio samples
+data/samples/*
+!data/samples/.gitkeep
+data/test/*
+!data/test/.gitkeep
+data/datasets/*
+!data/datasets/.gitkeep
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+
+# Logs & temporary run files
+logs/*
+!logs/.gitkeep
+*.log
+
+# Environment variables & secrets
+.env
+.env.*
+secrets.*
+credentials.*
+
+# OS specific
+.DS_Store
+Thumbs.db

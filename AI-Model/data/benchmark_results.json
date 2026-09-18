@@ -1,0 +1,234 @@
+[
+  {
+    "file": "ai_kokoro_heart0.wav",
+    "ground_truth": "AI_VOICE",
+    "duration_seconds": 4.95,
+    "sample_rate": 24000,
+    "channels": 1,
+    "format": "WAV",
+    "wav2vec2": {
+      "prediction": "real",
+      "assessment": "LIKELY_HUMAN",
+      "real_probability": 0.9144,
+      "fake_probability": 0.0856,
+      "logits": {
+        "real": 1.1673,
+        "fake": -1.2019
+      },
+      "latency_seconds": null
+    },
+    "df_arena_500m": {
+      "prediction": "spoof",
+      "assessment": "LIKELY_SYNTHETIC",
+      "bona_fide_score": -5.1484,
+      "spoof_score": 5.6461,
+      "bona_fide_probability": 0.0,
+      "spoof_probability": 1.0,
+      "latency_seconds": 7.8884
+    },
+    "agreement": "DISAGREEMENT"
+  },
+  {
+    "file": "ai_luvvoice.wav",
+    "ground_truth": "AI_VOICE",
+    "duration_seconds": 43.272,
+    "sample_rate": 24000,
+    "channels": 1,
+    "format": "WAV",
+    "wav2vec2": {
+      "prediction": "fake",
+      "assessment": "LIKELY_SYNTHETIC",
+      "real_probability": 0.2585,
+      "fake_probability": 0.7415,
+      "logits": {
+        "real": -0.5207,
+        "fake": 0.5329
+      },
+      "latency_seconds": null
+    },
+    "df_arena_500m": {
+      "prediction": "spoof",
+      "assessment": "LIKELY_SYNTHETIC",
+      "bona_fide_score": -4.4605,
+      "spoof_score": 5.2049,
+      "bona_fide_probability": 0.0001,
+      "spoof_probability": 0.9999,
+      "latency_seconds": 4.2911
+    },
+    "agreement": "UNANIMOUS"
+  },
+  {
+    "file": "ai_piper_amy.mp3",
+    "ground_truth": "AI_VOICE",
+    "duration_seconds": 10.394,
+    "sample_rate": 22050,
+    "channels": 1,
+    "format": "MP3",
+    "wav2vec2": {
+      "prediction": "real",
+      "assessment": "LIKELY_HUMAN",
+      "real_probability": 0.9208,
+      "fake_probability": 0.0792,
+      "logits": {
+        "real": 1.2077,
+        "fake": -1.2458
+      },
+      "latency_seconds": null
+    },
+    "df_arena_500m": {
+      "prediction": "spoof",
+      "assessment": "LIKELY_SYNTHETIC",
+      "bona_fide_score": -4.7462,
+      "spoof_score": 5.6119,
+      "bona_fide_probability": 0.0,
+      "spoof_probability": 1.0,
+      "latency_seconds": 3.4196
+    },
+    "agreement": "DISAGREEMENT"
+  },
+  {
+    "file": "ai_voice.wav",
+    "ground_truth": "AI_VOICE",
+    "duration_seconds": 3.934,
+    "sample_rate": 16000,
+    "channels": 1,
+    "format": "WAV",
+    "wav2vec2": {
+      "prediction": "fake",
+      "assessment": "LIKELY_SYNTHETIC",
+      "real_probability": 0.1103,
+      "fake_probability": 0.8897,
+      "logits": {
+        "real": -1.028,
+        "fake": 1.0601
+      },
+      "latency_seconds": null
+    },
+    "df_arena_500m": {
+      "prediction": "spoof",
+      "assessment": "LIKELY_SYNTHETIC",
+      "bona_fide_score": -4.6425,
+      "spoof_score": 5.5258,
+      "bona_fide_probability": 0.0,
+      "spoof_probability": 1.0,
+      "latency_seconds": 3.2675
+    },
+    "agreement": "UNANIMOUS"
+  },
+  {
+    "file": "human_armstrong.wav",
+    "ground_truth": "HUMAN",
+    "duration_seconds": 24.113,
+    "sample_rate": 11025,
+    "channels": 1,
+    "format": "WAV",
+    "wav2vec2": {
+      "prediction": "real",
+      "assessment": "LIKELY_HUMAN",
+      "real_probability": 0.9289,
+      "fake_probability": 0.0711,
+      "logits": {
+        "real": 1.2703,
+        "fake": -1.299
+      },
+      "latency_seconds": null
+    },
+    "df_arena_500m": {
+      "prediction": "spoof",
+      "assessment": "LIKELY_SYNTHETIC",
+      "bona_fide_score": -2.4507,
+      "spoof_score": 2.8604,
+      "bona_fide_probability": 0.0049,
+      "spoof_probability": 0.9951,
+      "latency_seconds": 3.5181
+    },
+    "agreement": "DISAGREEMENT"
+  },
+  {
+    "file": "human_churchill.wav",
+    "ground_truth": "HUMAN",
+    "duration_seconds": 15.0,
+    "sample_rate": 11025,
+    "channels": 1,
+    "format": "WAV",
+    "wav2vec2": {
+      "prediction": "real",
+      "assessment": "LIKELY_HUMAN",
+      "real_probability": 0.8731,
+      "fake_probability": 0.1269,
+      "logits": {
+        "real": 0.952,
+        "fake": -0.9765
+      },
+      "latency_seconds": null
+    },
+    "df_arena_500m": {
+      "prediction": "spoof",
+      "assessment": "LIKELY_SYNTHETIC",
+      "bona_fide_score": -4.1769,
+      "spoof_score": 5.0892,
+      "bona_fide_probability": 0.0001,
+      "spoof_probability": 0.9999,
+      "latency_seconds": 3.6466
+    },
+    "agreement": "DISAGREEMENT"
+  },
+  {
+    "file": "human_kennedy.ogg",
+    "ground_truth": "HUMAN",
+    "duration_seconds": 14.601,
+    "sample_rate": 16000,
+    "channels": 1,
+    "format": "OGG",
+    "wav2vec2": {
+      "prediction": "real",
+      "assessment": "LIKELY_HUMAN",
+      "real_probability": 0.9031,
+      "fake_probability": 0.0969,
+      "logits": {
+        "real": 1.1051,
+        "fake": -1.127
+      },
+      "latency_seconds": null
+    },
+    "df_arena_500m": {
+      "prediction": "spoof",
+      "assessment": "LIKELY_SYNTHETIC",
+      "bona_fide_score": -3.9845,
+      "spoof_score": 4.623,
+      "bona_fide_probability": 0.0002,
+      "spoof_probability": 0.9998,
+      "latency_seconds": 3.585
+    },
+    "agreement": "DISAGREEMENT"
+  },
+  {
+    "file": "human_voice.wav",
+    "ground_truth": "HUMAN",
+    "duration_seconds": 4.642,
+    "sample_rate": 44100,
+    "channels": 2,
+    "format": "WAV",
+    "wav2vec2": {
+      "prediction": "real",
+      "assessment": "LIKELY_HUMAN",
+      "real_probability": 0.8965,
+      "fake_probability": 0.1035,
+      "logits": {
+        "real": 1.0638,
+        "fake": -1.0949
+      },
+      "latency_seconds": null
+    },
+    "df_arena_500m": {
+      "prediction": "spoof",
+      "assessment": "LIKELY_SYNTHETIC",
+      "bona_fide_score": -1.0918,
+      "spoof_score": 1.521,
+      "bona_fide_probability": 0.0683,
+      "spoof_probability": 0.9317,
+      "latency_seconds": 3.4865
+    },
+    "agreement": "DISAGREEMENT"
+  }
+]
