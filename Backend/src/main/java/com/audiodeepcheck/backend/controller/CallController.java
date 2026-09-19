@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/v1/calls")
+@RequestMapping({"/api/v1/calls", "/calls", "/api/calls"})
 public class CallController {
 
     private final CallSessionService sessionService;

@@ -27,7 +27,7 @@ def run_batch_benchmark():
         return
 
     print("=" * 110)
-    print(f"AUDIO DEEPCHECK — COMPREHENSIVE MULTI-SAMPLE BENCHMARK EVALUATION")
+    print(f"AUDIO DEEPCHECK - COMPREHENSIVE MULTI-SAMPLE BENCHMARK EVALUATION")
     print(f"Total Samples to Evaluate: {len(audio_files)}")
     print("=" * 110)
 
@@ -74,21 +74,32 @@ def run_batch_benchmark():
     print(f"Phase 2 Complete in {df_total_time:.2f}s. DF Arena 500M unloaded.")
 
     # 4. Phase 3: Consolidated Benchmark Summary Table
-    print("\n" + "=" * 110)
+    # Weights mirror EvidenceNormalizer.DEFAULT_WEIGHTS
+    W2V_WEIGHT  = 0.55   # PRIMARY
+    DF_WEIGHT   = 0.15   # SECONDARY (demoted - systematic bias on real audio)
+
+    print("\n" + "=" * 120)
     print("CONSOLIDATED MULTI-MODEL BENCHMARK MATRIX")
-    print("=" * 110)
-    header = f"{'Sample File':<24} | {'Ground Truth':<12} | {'Dur(s)':<6} | {'Wav2Vec2 Pred':<14} | {'DF Arena Pred':<15} | {'Agreement':<18}"
+    print(f"  Priority Weights -> Wav2Vec2: {W2V_WEIGHT:.0%}  |  DF Arena: {DF_WEIGHT:.0%}  (Wav2Vec2 is the primary decision model)")
+    print("=" * 120)
+    header = (
+        f"{'Sample File':<24} | {'Truth':<10} | {'Dur(s)':<6} | "
+        f"{'Wav2Vec2 (55%)':<20} | {'DF Arena (15%)':<22} | "
+        f"{'Weighted Decision':<18} | {'Correct?':<8}"
+    )
     print(header)
-    print("-" * 110)
+    print("-" * 120)
 
     consolidated_records = []
+    correct_count = 0
+    total_count   = 0
 
     for f in audio_files:
         meta = metadata_map[f.name]
-        w2v = w2v_results[f.name]
-        df = df_results[f.name]
+        w2v  = w2v_results[f.name]
+        df   = df_results[f.name]
 
-        # Determine ground truth from filename prefix
+        # -- Ground truth from filename prefix ---------------------------------
         if f.name.startswith("human_"):
             truth = "HUMAN"
         elif f.name.startswith("ai_"):
@@ -96,20 +107,55 @@ def run_batch_benchmark():
         else:
             truth = "UNKNOWN"
 
-        # Determine agreement
-        # Wav2Vec2: 'real' / 'fake'; DF Arena: 'bonafide' / 'spoof'
-        w2v_is_human = (w2v["prediction"] == "real")
-        df_is_human = (df["prediction"] == "bonafide")
+        # -- Raw probabilities --------------------------------------------------
+        # Wav2Vec2 - fake_probability -> synthetic evidence
+        w2v_synth_prob = float(w2v["fake_probability"])   # 1.0 = certain AI
+        w2v_human_prob = float(w2v["real_probability"])   # 1.0 = certain human
 
-        if w2v_is_human == df_is_human:
-            agreement = "UNANIMOUS"
+        # DF Arena - spoof_probability -> synthetic evidence
+        df_synth_prob  = float(df["spoof_probability"])
+        df_human_prob  = float(df["bona_fide_probability"])
+
+        # -- Weighted fusion score: +1 = AI, -1 = human ------------------------
+        w2v_signed  = w2v_synth_prob - w2v_human_prob  # in [-1, +1]
+        df_signed   = df_synth_prob  - df_human_prob   # in [-1, +1]
+
+        total_w = W2V_WEIGHT + DF_WEIGHT
+        fused_score = (W2V_WEIGHT * w2v_signed + DF_WEIGHT * df_signed) / total_w
+
+        # -- Final decision -----------------------------------------------------
+        if fused_score > 0.10:
+            decision = "AI_VOICE"
+        elif fused_score < -0.10:
+            decision = "HUMAN"
         else:
-            agreement = "DISAGREEMENT"
+            decision = "UNCERTAIN"
 
-        w2v_str = f"{w2v['prediction'].upper()} ({w2v['real_probability']*100:.1f}% R)"
-        df_str = f"{df['prediction'].upper()} ({df['spoof_probability']*100:.1f}% Sp)"
+        # -- Agreement label ---------------------------------------------------
+        w2v_is_human = (w2v["prediction"] == "real")
+        df_is_human  = (df["prediction"]  == "bonafide")
+        agreement    = "UNANIMOUS" if w2v_is_human == df_is_human else "DISAGREE"
 
-        print(f"{f.name:<24} | {truth:<12} | {meta['duration_seconds']:>6.1f} | {w2v_str:<14} | {df_str:<15} | {agreement:<18}")
+        # -- Correctness -------------------------------------------------------
+        if truth != "UNKNOWN":
+            total_count += 1
+            is_correct = (decision == truth) or (decision == "UNCERTAIN")
+            correct_str = "OK" if decision == truth else ("~" if decision == "UNCERTAIN" else "XX")
+            if decision == truth:
+                correct_count += 1
+        else:
+            correct_str = "?"
+
+        # -- Format columns ----------------------------------------------------
+        w2v_col = f"{w2v['prediction'].upper()} ({w2v_human_prob*100:.1f}%H / {w2v_synth_prob*100:.1f}%AI)"
+        df_col  = f"{df['prediction'].upper()} ({df_human_prob*100:.1f}%H / {df_synth_prob*100:.1f}%AI)"
+        dec_col = f"{decision} [{fused_score:+.3f}]"
+
+        print(
+            f"{f.name:<24} | {truth:<10} | {meta['duration_seconds']:>6.1f} | "
+            f"{w2v_col:<20} | {df_col:<22} | "
+            f"{dec_col:<18} | {correct_str:<8}"
+        )
 
         consolidated_records.append({
             "file": f.name,
@@ -124,7 +170,7 @@ def run_batch_benchmark():
                 "real_probability": w2v["real_probability"],
                 "fake_probability": w2v["fake_probability"],
                 "logits": w2v["logits"],
-                "latency_seconds": w2v.get("inference_time_seconds")
+                "latency_seconds": w2v.get("inference_time_seconds"),
             },
             "df_arena_500m": {
                 "prediction": df["prediction"],
@@ -133,21 +179,39 @@ def run_batch_benchmark():
                 "spoof_score": df["spoof_score"],
                 "bona_fide_probability": df["bona_fide_probability"],
                 "spoof_probability": df["spoof_probability"],
-                "latency_seconds": df.get("inference_time_seconds")
+                "latency_seconds": df.get("inference_time_seconds"),
             },
-            "agreement": agreement
+            "weighted_fusion": {
+                "fused_score": round(fused_score, 4),
+                "decision": decision,
+                "wav2vec2_weight": W2V_WEIGHT,
+                "df_arena_weight": DF_WEIGHT,
+            },
+            "agreement": agreement,
+            "correct": correct_str,
         })
 
-    print("-" * 110)
-    print(f"Total Evaluation Latency: {w2v_total_time + df_total_time:.2f}s (Wav2Vec2: {w2v_total_time:.2f}s, DF Arena: {df_total_time:.2f}s)")
+    # -- Summary footer ---------------------------------------------------------
+    print("-" * 120)
+    if total_count > 0:
+        accuracy = correct_count / total_count * 100
+        print(f"\n  ACCURACY (exact match):  {correct_count}/{total_count}  ->  {accuracy:.1f}%")
+        print(f"  Legend: OK = correct prediction   XX = wrong prediction   ~ = UNCERTAIN (neither wrong nor right)")
+    print(f"\n  Total Evaluation Latency: {w2v_total_time + df_total_time:.2f}s")
+    print(f"    Wav2Vec2 phase : {w2v_total_time:.2f}s")
+    print(f"    DF Arena phase : {df_total_time:.2f}s")
+    print(f"\n  Priority Note: Wav2Vec2 is the primary model (weight={W2V_WEIGHT}).")
+    print(f"  DF Arena is secondary (weight={DF_WEIGHT}) - it has a known bias toward")
+    print(f"  flagging historical/compressed recordings as synthetic.\n")
 
     # Save to JSON
     with open(RESULTS_FILE, "w", encoding="utf-8") as out_f:
         json.dump(consolidated_records, out_f, indent=2)
-    print(f"\nDetailed benchmark results saved to: {RESULTS_FILE}")
+    print(f"  Detailed results saved to: {RESULTS_FILE}")
 
     return consolidated_records
 
 
 if __name__ == "__main__":
     run_batch_benchmark()
+

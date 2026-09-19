@@ -13,6 +13,9 @@ export const mockMetrics: DashboardMetrics = {
   analyzing: { count: 4, change: '25%', positive: true },
   completed: { count: 87, change: '18%', positive: true },
   needsAttention: { count: 9, change: '50%', positive: false },
+  humanCount: 48,
+  aiCount: 28,
+  uncertainCount: 9,
 };
 
 export const mockCallVolumeData: CallVolumeData[] = [
@@ -235,43 +238,43 @@ export const mockCallHistory: CallRecord[] = [
 export const mockEvidenceModules: EvidenceModule[] = [
   {
     module: 'wav2vec2',
-    name: 'Wav2Vec2 Self-Supervised Acoustic',
+    name: 'Wav2Vec2 INT8 ONNX',
     status: 'USED',
-    direction: 'SYNTHETIC',
-    contribution: 0.34,
-    description: 'Neural artifact detection in frame embeddings indicate synthetic waveform reconstruction.'
+    direction: 'HUMAN',
+    contribution: 0.35,
+    description: 'Neural artifact detection in frame embeddings indicates genuine human acoustic characteristics.'
   },
   {
     module: 'df_arena',
-    name: 'DF Arena / AASIST Graph Classifier',
+    name: 'DF Arena 500M',
     status: 'USED',
-    direction: 'SYNTHETIC',
-    contribution: 0.28,
-    description: 'Spectral graph convolutional layers identify non-natural spectral continuity across formants.'
-  },
-  {
-    module: 'prosody',
-    name: 'Prosody & Pitch (F0) Contour Analysis',
-    status: 'USED',
-    direction: 'MIXED',
-    contribution: 0.15,
-    description: 'Pitch micro-jitter is flatter than natural human speech, suggesting neural vocoder output.'
+    direction: 'HUMAN',
+    contribution: 0.25,
+    description: 'Deepfake Arena spectral graph layers confirm natural spectral continuity across formants.'
   },
   {
     module: 'spectrogram',
-    name: 'Spectrogram Anomaly / High-Frequency Filter',
+    name: 'Spectrogram CNN',
     status: 'USED',
-    direction: 'SUPPORTING',
-    contribution: 0.12,
-    description: 'High-frequency phase distortion observed above 7.2kHz characteristic of diffusion TTS.'
+    direction: 'HUMAN',
+    contribution: 0.15,
+    description: 'Time-frequency spectrogram analysis confirms absence of neural vocoder phase artifacts.'
+  },
+  {
+    module: 'prosody',
+    name: 'Prosody / F0 Analyzer',
+    status: 'USED',
+    direction: 'HUMAN',
+    contribution: 0.15,
+    description: 'Pitch micro-jitter and fundamental frequency contour reflect natural human biological variation.'
   },
   {
     module: 'whisper',
-    name: 'Whisper Phonetic Consistency',
+    name: 'Whisper Tiny Rep',
     status: 'USED',
-    direction: 'SUPPORTING',
-    contribution: 0.11,
-    description: 'Phoneme transitions match expected acoustic pattern with minor temporal compression.'
+    direction: 'HUMAN',
+    contribution: 0.10,
+    description: 'Phoneme transitions match expected acoustic pattern with natural temporal dynamics.'
   }
 ];
 

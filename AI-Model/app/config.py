@@ -27,7 +27,7 @@ ANALYSIS_CONCURRENCY: int = max(1, int(os.getenv("ANALYSIS_CONCURRENCY", "1")))
 SEMAPHORE_TIMEOUT_SEC: float = float(os.getenv("ANALYSIS_SEMAPHORE_TIMEOUT_SEC", "30.0"))
 
 # Allowed Audio File Extensions
-ALLOWED_EXTENSIONS: Set[str] = {".wav", ".mp3", ".flac", ".ogg"}
+ALLOWED_EXTENSIONS: Set[str] = {".wav", ".war", ".mp3", ".flac", ".ogg"}
 
 # Allowed MIME types (includes common audio container types and octet-stream fallback)
 ALLOWED_MIME_TYPES: Set[str] = {

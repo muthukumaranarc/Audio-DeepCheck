@@ -25,7 +25,7 @@ def analyze_file(audio_path: Path):
         print(f"Error: Audio file not found at: {audio_path}")
         sys.exit(1)
 
-    print_banner("AUDIO DEEPCHECK — MULTI-MODEL FORENSIC ANALYSIS")
+    print_banner("AUDIO DEEPCHECK - MULTI-MODEL FORENSIC ANALYSIS")
     meta = inspect_audio(audio_path)
     print(f"  File Name:        {meta['file_name']}")
     print(f"  Sample Rate:      {meta['sample_rate']} Hz")
@@ -72,18 +72,49 @@ def analyze_file(audio_path: Path):
 
     total_time = time.perf_counter() - t_total_start
 
+    # -- Priority-Weighted Fusion Decision -------------------------------------
+    # Wav2Vec2 is PRIMARY (weight 0.55); DF Arena is SECONDARY (weight 0.15).
+    # DF Arena has a known systematic bias toward flagging compressed/historical
+    # human recordings as synthetic - so Wav2Vec2 dominates the final verdict.
+    W2V_W = 0.55
+    DF_W  = 0.15
+    total_w = W2V_W + DF_W
+
+    w2v_signed = w2v_result["fake_probability"] - w2v_result["real_probability"]
+    df_signed  = df_result["spoof_probability"] - df_result["bona_fide_probability"]
+    fused_score = (W2V_W * w2v_signed + DF_W * df_signed) / total_w
+
+    if fused_score > 0.10:
+        final_decision = "AI_VOICE  [SYNTHETIC]"
+    elif fused_score < -0.10:
+        final_decision = "HUMAN     [AUTHENTIC]"
+    else:
+        final_decision = "UNCERTAIN [INCONCLUSIVE]"
+
     # Consolidated Side-by-Side Summary
     print("\n" + "=" * 70)
-    print("INDEPENDENT DETECTOR COMPARISON (NO FUSION YET)")
+    print("INDEPENDENT DETECTOR RESULTS")
     print("=" * 70)
-    print(f"{'Detector':<20} | {'Prediction':<12} | {'Assessment':<18} | {'Primary Score / Prob':<22}")
-    print("-" * 74)
-    w2v_score_str = f"Real: {w2v_result['real_probability']*100:.1f}%"
-    print(f"{'Wav2Vec2 (XLSR)':<20} | {w2v_result['prediction'].upper():<12} | {w2v_result['assessment']:<18} | {w2v_score_str:<22}")
-    df_score_str = f"BF Prob: {df_result['bona_fide_probability']*100:.1f}%"
-    print(f"{'DF Arena 500M':<20} | {df_result['prediction'].upper():<12} | {df_result['assessment']:<18} | {df_score_str:<22}")
-    print("-" * 74)
-    print(f"Total Pipeline Latency: {total_time:.4f} seconds")
+    print(f"{'Detector':<20} | {'Prediction':<10} | {'Human %':<10} | {'AI %':<10} | {'Weight'}")
+    print("-" * 70)
+    print(
+        f"{'Wav2Vec2 (PRIMARY)':<20} | {w2v_result['prediction'].upper():<10} | "
+        f"{w2v_result['real_probability']*100:>6.1f}%    | "
+        f"{w2v_result['fake_probability']*100:>6.1f}%    | {W2V_W:.0%}"
+    )
+    print(
+        f"{'DF Arena 500M (2nd)':<20} | {df_result['prediction'].upper():<10} | "
+        f"{df_result['bona_fide_probability']*100:>6.1f}%    | "
+        f"{df_result['spoof_probability']*100:>6.1f}%    | {DF_W:.0%}"
+    )
+    print("-" * 70)
+    print(f"\n  WEIGHTED FUSION SCORE : {fused_score:+.4f}  (+ = AI evidence, - = Human evidence)")
+    print(f"  FINAL DECISION        : {final_decision}")
+    print(f"  Pipeline Latency      : {total_time:.4f} seconds")
+    print(f"\n  Note: Wav2Vec2 ({W2V_W:.0%}) leads the decision.")
+    print(f"  DF Arena ({DF_W:.0%}) is secondary - it has a known bias toward flagging")
+    print(f"  historical/compressed audio as synthetic.\n")
+
 
     # Structured Output Summary
     summary = {
@@ -120,7 +151,7 @@ def analyze_file(audio_path: Path):
 
 
 def show_usage():
-    print_banner("AUDIO DEEPCHECK — MULTI-MODEL PIPELINE RUNNER")
+    print_banner("AUDIO DEEPCHECK - MULTI-MODEL PIPELINE RUNNER")
     print("Usage:")
     print("  py -3.11 scripts/run_pipeline.py \"<path_to_audio_file>\"\n")
     print("Examples:")

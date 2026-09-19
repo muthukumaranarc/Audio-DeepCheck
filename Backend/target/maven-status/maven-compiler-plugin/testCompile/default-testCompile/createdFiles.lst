@@ -1,11 +1,2 @@
-com\audiodeepcheck\backend\service\CallAnalysisServiceTest.class
-com\audiodeepcheck\backend\CallFlowIntegrationTest.class
-com\audiodeepcheck\backend\client\FastApiAiClientTest.class
-com\audiodeepcheck\backend\service\CallSessionServiceTest.class
-com\audiodeepcheck\backend\repository\MongoPerformanceTest.class
-com\audiodeepcheck\backend\controller\HealthControllerTest.class
 com\audiodeepcheck\backend\CallFlowIntegrationTest$1.class
-com\audiodeepcheck\backend\repository\MongoPersistenceIntegrationTest.class
-com\audiodeepcheck\backend\service\BackendHealthServiceTest.class
-com\audiodeepcheck\backend\domain\CallSessionTest.class
-com\audiodeepcheck\backend\controller\CallControllerTest.class
+com\audiodeepcheck\backend\CallFlowIntegrationTest.class

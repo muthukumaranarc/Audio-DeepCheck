@@ -9,24 +9,31 @@
     "wav2vec2": {
       "prediction": "real",
       "assessment": "LIKELY_HUMAN",
-      "real_probability": 0.9144,
-      "fake_probability": 0.0856,
+      "real_probability": 0.918,
+      "fake_probability": 0.082,
       "logits": {
-        "real": 1.1673,
-        "fake": -1.2019
+        "real": 1.1892,
+        "fake": -1.2262
       },
       "latency_seconds": null
     },
     "df_arena_500m": {
       "prediction": "spoof",
       "assessment": "LIKELY_SYNTHETIC",
-      "bona_fide_score": -5.1484,
-      "spoof_score": 5.6461,
+      "bona_fide_score": -5.1697,
+      "spoof_score": 5.6656,
       "bona_fide_probability": 0.0,
       "spoof_probability": 1.0,
-      "latency_seconds": 7.8884
+      "latency_seconds": 8.9494
     },
-    "agreement": "DISAGREEMENT"
+    "weighted_fusion": {
+      "fused_score": -0.4426,
+      "decision": "HUMAN",
+      "wav2vec2_weight": 0.55,
+      "df_arena_weight": 0.15
+    },
+    "agreement": "DISAGREE",
+    "correct": "XX"
   },
   {
     "file": "ai_luvvoice.wav",
@@ -38,24 +45,31 @@
     "wav2vec2": {
       "prediction": "fake",
       "assessment": "LIKELY_SYNTHETIC",
-      "real_probability": 0.2585,
-      "fake_probability": 0.7415,
+      "real_probability": 0.1912,
+      "fake_probability": 0.8088,
       "logits": {
-        "real": -0.5207,
-        "fake": 0.5329
+        "real": -0.7119,
+        "fake": 0.7306
       },
       "latency_seconds": null
     },
     "df_arena_500m": {
       "prediction": "spoof",
       "assessment": "LIKELY_SYNTHETIC",
-      "bona_fide_score": -4.4605,
-      "spoof_score": 5.2049,
-      "bona_fide_probability": 0.0001,
-      "spoof_probability": 0.9999,
-      "latency_seconds": 4.2911
+      "bona_fide_score": -4.7688,
+      "spoof_score": 5.4135,
+      "bona_fide_probability": 0.0,
+      "spoof_probability": 1.0,
+      "latency_seconds": 6.4721
     },
-    "agreement": "UNANIMOUS"
+    "weighted_fusion": {
+      "fused_score": 0.6995,
+      "decision": "AI_VOICE",
+      "wav2vec2_weight": 0.55,
+      "df_arena_weight": 0.15
+    },
+    "agreement": "UNANIMOUS",
+    "correct": "OK"
   },
   {
     "file": "ai_piper_amy.mp3",
@@ -67,24 +81,31 @@
     "wav2vec2": {
       "prediction": "real",
       "assessment": "LIKELY_HUMAN",
-      "real_probability": 0.9208,
-      "fake_probability": 0.0792,
+      "real_probability": 0.9073,
+      "fake_probability": 0.0927,
       "logits": {
-        "real": 1.2077,
-        "fake": -1.2458
+        "real": 1.1221,
+        "fake": -1.1587
       },
       "latency_seconds": null
     },
     "df_arena_500m": {
       "prediction": "spoof",
       "assessment": "LIKELY_SYNTHETIC",
-      "bona_fide_score": -4.7462,
-      "spoof_score": 5.6119,
+      "bona_fide_score": -4.9185,
+      "spoof_score": 5.7048,
       "bona_fide_probability": 0.0,
       "spoof_probability": 1.0,
-      "latency_seconds": 3.4196
+      "latency_seconds": 3.663
     },
-    "agreement": "DISAGREEMENT"
+    "weighted_fusion": {
+      "fused_score": -0.4258,
+      "decision": "HUMAN",
+      "wav2vec2_weight": 0.55,
+      "df_arena_weight": 0.15
+    },
+    "agreement": "DISAGREE",
+    "correct": "XX"
   },
   {
     "file": "ai_voice.wav",
@@ -111,9 +132,16 @@
       "spoof_score": 5.5258,
       "bona_fide_probability": 0.0,
       "spoof_probability": 1.0,
-      "latency_seconds": 3.2675
+      "latency_seconds": 3.6874
     },
-    "agreement": "UNANIMOUS"
+    "weighted_fusion": {
+      "fused_score": 0.8267,
+      "decision": "AI_VOICE",
+      "wav2vec2_weight": 0.55,
+      "df_arena_weight": 0.15
+    },
+    "agreement": "UNANIMOUS",
+    "correct": "OK"
   },
   {
     "file": "human_armstrong.wav",
@@ -125,24 +153,31 @@
     "wav2vec2": {
       "prediction": "real",
       "assessment": "LIKELY_HUMAN",
-      "real_probability": 0.9289,
-      "fake_probability": 0.0711,
+      "real_probability": 0.9284,
+      "fake_probability": 0.0716,
       "logits": {
-        "real": 1.2703,
-        "fake": -1.299
+        "real": 1.2671,
+        "fake": -1.2952
       },
       "latency_seconds": null
     },
     "df_arena_500m": {
       "prediction": "spoof",
       "assessment": "LIKELY_SYNTHETIC",
-      "bona_fide_score": -2.4507,
-      "spoof_score": 2.8604,
+      "bona_fide_score": -2.4462,
+      "spoof_score": 2.8596,
       "bona_fide_probability": 0.0049,
       "spoof_probability": 0.9951,
-      "latency_seconds": 3.5181
+      "latency_seconds": 3.7551
     },
-    "agreement": "DISAGREEMENT"
+    "weighted_fusion": {
+      "fused_score": -0.461,
+      "decision": "HUMAN",
+      "wav2vec2_weight": 0.55,
+      "df_arena_weight": 0.15
+    },
+    "agreement": "DISAGREE",
+    "correct": "OK"
   },
   {
     "file": "human_churchill.wav",
@@ -154,24 +189,31 @@
     "wav2vec2": {
       "prediction": "real",
       "assessment": "LIKELY_HUMAN",
-      "real_probability": 0.8731,
-      "fake_probability": 0.1269,
+      "real_probability": 0.8712,
+      "fake_probability": 0.1288,
       "logits": {
-        "real": 0.952,
-        "fake": -0.9765
+        "real": 0.9435,
+        "fake": -0.9684
       },
       "latency_seconds": null
     },
     "df_arena_500m": {
       "prediction": "spoof",
       "assessment": "LIKELY_SYNTHETIC",
-      "bona_fide_score": -4.1769,
-      "spoof_score": 5.0892,
+      "bona_fide_score": -4.1741,
+      "spoof_score": 5.0962,
       "bona_fide_probability": 0.0001,
       "spoof_probability": 0.9999,
-      "latency_seconds": 3.6466
+      "latency_seconds": 3.8085
     },
-    "agreement": "DISAGREEMENT"
+    "weighted_fusion": {
+      "fused_score": -0.3691,
+      "decision": "HUMAN",
+      "wav2vec2_weight": 0.55,
+      "df_arena_weight": 0.15
+    },
+    "agreement": "DISAGREE",
+    "correct": "OK"
   },
   {
     "file": "human_kennedy.ogg",
@@ -198,9 +240,16 @@
       "spoof_score": 4.623,
       "bona_fide_probability": 0.0002,
       "spoof_probability": 0.9998,
-      "latency_seconds": 3.585
+      "latency_seconds": 3.5636
     },
-    "agreement": "DISAGREEMENT"
+    "weighted_fusion": {
+      "fused_score": -0.4192,
+      "decision": "HUMAN",
+      "wav2vec2_weight": 0.55,
+      "df_arena_weight": 0.15
+    },
+    "agreement": "DISAGREE",
+    "correct": "OK"
   },
   {
     "file": "human_voice.wav",
@@ -212,23 +261,30 @@
     "wav2vec2": {
       "prediction": "real",
       "assessment": "LIKELY_HUMAN",
-      "real_probability": 0.8965,
-      "fake_probability": 0.1035,
+      "real_probability": 0.8984,
+      "fake_probability": 0.1016,
       "logits": {
-        "real": 1.0638,
-        "fake": -1.0949
+        "real": 1.0736,
+        "fake": -1.1056
       },
       "latency_seconds": null
     },
     "df_arena_500m": {
       "prediction": "spoof",
       "assessment": "LIKELY_SYNTHETIC",
-      "bona_fide_score": -1.0918,
-      "spoof_score": 1.521,
-      "bona_fide_probability": 0.0683,
-      "spoof_probability": 0.9317,
-      "latency_seconds": 3.4865
+      "bona_fide_score": -2.0509,
+      "spoof_score": 2.425,
+      "bona_fide_probability": 0.0113,
+      "spoof_probability": 0.9887,
+      "latency_seconds": 3.5193
     },
-    "agreement": "DISAGREEMENT"
+    "weighted_fusion": {
+      "fused_score": -0.4166,
+      "decision": "HUMAN",
+      "wav2vec2_weight": 0.55,
+      "df_arena_weight": 0.15
+    },
+    "agreement": "DISAGREE",
+    "correct": "OK"
   }
 ]

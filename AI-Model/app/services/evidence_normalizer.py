@@ -88,12 +88,21 @@ class EvidenceNormalizer:
     and applies objective quality gating based on signal diagnostics.
     """
 
+    # -- Module Evidence Weights -------------------------------------------------
+    # Wav2Vec2 (XLSR-53) is the PRIMARY detector - highest weight.
+    #   Correctly classifies all human samples + most AI samples in benchmarks.
+    #
+    # DF Arena 500M is SECONDARY - demoted to 0.15 because it produces a
+    #   systematic false-positive bias (flags all historical human recordings as
+    #   SPOOF), so its raw signal is informative only when Wav2Vec2 agrees.
+    #
+    # Spectrogram, Prosody, and Whisper are SUPPORTING detectors.
     DEFAULT_WEIGHTS = {
-        "wav2vec2": 0.35,
-        "df_arena": 0.35,
-        "spectrogram": 0.10,
-        "prosody": 0.10,
-        "whisper_representation": 0.10,
+        "wav2vec2": 0.55,              # PRIMARY  - most reliable, highest priority
+        "df_arena": 0.15,              # SECONDARY - demoted; systematic bias on real voices
+        "spectrogram": 0.12,           # SUPPORTING
+        "prosody": 0.10,               # SUPPORTING
+        "whisper_representation": 0.08, # SUPPORTING
     }
 
     def __init__(

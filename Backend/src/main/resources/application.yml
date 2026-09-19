@@ -1,5 +1,6 @@
 server:
   port: 8080
+  address: 0.0.0.0
 
 spring:
   application:
@@ -19,8 +20,8 @@ ai:
   service:
     base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
     connect-timeout-ms: ${AI_SERVICE_CONNECT_TIMEOUT_MS:5000}
-    read-timeout-ms: ${AI_SERVICE_READ_TIMEOUT_MS:60000}
-    analyze-timeout-ms: ${AI_SERVICE_ANALYZE_TIMEOUT_MS:65000}
+    read-timeout-ms: ${AI_SERVICE_READ_TIMEOUT_MS:180000}
+    analyze-timeout-ms: ${AI_SERVICE_ANALYZE_TIMEOUT_MS:185000}
 
 management:
   endpoints:

@@ -155,7 +155,7 @@ class FastApiAiClientTest {
         assertThat(result.conflictLevel()).isEqualTo("MEDIUM");
         assertThat(result.quality().usable()).isTrue();
         assertThat(result.chunkDetails()).hasSize(1);
-        assertThat(result.modules()).containsKey("wav2vec2");
+        assertThat(result.getEffectiveModuleList()).isNotEmpty();
         server.verify();
     }
 

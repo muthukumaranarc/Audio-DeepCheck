@@ -18,7 +18,7 @@ public class AiServiceConfig {
     @Value("${ai.service.connect-timeout-ms:5000}")
     private int connectTimeoutMs;
 
-    @Value("${ai.service.read-timeout-ms:60000}")
+    @Value("${ai.service.read-timeout-ms:180000}")
     private int readTimeoutMs;
 
     @Bean

@@ -53,6 +53,15 @@ public class CallSessionDocument {
     private String failureReason;
     private String requestId;
 
+    // Milestone 12: Two-User Simulation, Participant Identity, Sequencing & Backpressure
+    private String callerUserId;
+    private String receiverUserId;
+    private String callerSessionId;
+    private String receiverSessionId;
+    private int callerLastSequence = -1;
+    private int receiverLastSequence = -1;
+    private boolean backpressureDetected = false;
+
     public CallSessionDocument() {}
 
     public CallSessionDocument(String callId, String caller, String receiver) {
@@ -86,6 +95,13 @@ public class CallSessionDocument {
         doc.endReason = session.getEndReason();
         doc.failureReason = session.getFailureReason();
         doc.requestId = session.getRequestId();
+        doc.callerUserId = session.getCallerUserId();
+        doc.receiverUserId = session.getReceiverUserId();
+        doc.callerSessionId = session.getCallerSessionId();
+        doc.receiverSessionId = session.getReceiverSessionId();
+        doc.callerLastSequence = session.getCallerLastSequence();
+        doc.receiverLastSequence = session.getReceiverLastSequence();
+        doc.backpressureDetected = session.isBackpressureDetected();
         return doc;
     }
 
@@ -106,6 +122,13 @@ public class CallSessionDocument {
         setField(session, "lastProcessedSequence", lastProcessedSequence);
         setField(session, "endReason", endReason);
         setField(session, "failureReason", failureReason);
+        setField(session, "callerUserId", callerUserId);
+        setField(session, "receiverUserId", receiverUserId);
+        setField(session, "callerSessionId", callerSessionId);
+        setField(session, "receiverSessionId", receiverSessionId);
+        setField(session, "callerLastSequence", callerLastSequence);
+        setField(session, "receiverLastSequence", receiverLastSequence);
+        setField(session, "backpressureDetected", backpressureDetected);
         return session;
     }
 
@@ -161,4 +184,18 @@ public class CallSessionDocument {
     public void setFailureReason(String failureReason) { this.failureReason = failureReason; }
     public String getRequestId() { return requestId; }
     public void setRequestId(String requestId) { this.requestId = requestId; }
+    public String getCallerUserId() { return callerUserId; }
+    public void setCallerUserId(String callerUserId) { this.callerUserId = callerUserId; }
+    public String getReceiverUserId() { return receiverUserId; }
+    public void setReceiverUserId(String receiverUserId) { this.receiverUserId = receiverUserId; }
+    public String getCallerSessionId() { return callerSessionId; }
+    public void setCallerSessionId(String callerSessionId) { this.callerSessionId = callerSessionId; }
+    public String getReceiverSessionId() { return receiverSessionId; }
+    public void setReceiverSessionId(String receiverSessionId) { this.receiverSessionId = receiverSessionId; }
+    public int getCallerLastSequence() { return callerLastSequence; }
+    public void setCallerLastSequence(int callerLastSequence) { this.callerLastSequence = callerLastSequence; }
+    public int getReceiverLastSequence() { return receiverLastSequence; }
+    public void setReceiverLastSequence(int receiverLastSequence) { this.receiverLastSequence = receiverLastSequence; }
+    public boolean isBackpressureDetected() { return backpressureDetected; }
+    public void setBackpressureDetected(boolean backpressureDetected) { this.backpressureDetected = backpressureDetected; }
 }

@@ -153,15 +153,19 @@ public class CallSessionService {
 
         if (rawOpt.isPresent()) {
             FastApiAnalyzeDto raw = rawOpt.get();
-            if (raw.chunksSummary() != null) {
+            if (raw.chunks() != null) {
+                FastApiAnalyzeDto.ChunksSummaryDto cs = raw.chunks();
                 summaryReport = new CallReportResponse.ChunksSummaryReport(
-                        raw.chunksSummary().totalChunks(),
-                        raw.chunksSummary().usableChunks(),
-                        raw.chunksSummary().aiChunks(),
-                        raw.chunksSummary().humanChunks(),
-                        raw.chunksSummary().uncertainChunks(),
-                        raw.chunksSummary().aiChunkRatio(),
-                        raw.chunksSummary().trimmedMeanScore()
+                        cs.count(),                             // totalChunks
+                        cs.count(),                             // usableChunks (same as count)
+                        cs.aiFraction() != null
+                                ? (int) Math.round(cs.aiFraction() * cs.count()) : 0,
+                        cs.humanFraction() != null
+                                ? (int) Math.round(cs.humanFraction() * cs.count()) : 0,
+                        cs.uncertainFraction() != null
+                                ? (int) Math.round(cs.uncertainFraction() * cs.count()) : 0,
+                        cs.aiFraction(),
+                        null                                    // trimmedMeanScore not in new schema
                 );
             }
             if (raw.processingMetadata() != null) {
@@ -240,5 +244,56 @@ public class CallSessionService {
                 session.getLatestDecision(),
                 session.getCreatedAt()
         );
+    }
+
+    public CallSession save(CallSession session) {
+        return sessionRepository.save(session);
+    }
+
+    public CallSession createCallWithParticipants(String caller, String receiver, String callerUserId, String receiverUserId) {
+        String callId = "CALL-" + callIdSequence.incrementAndGet();
+        String requestId = RequestIdFilter.getCurrentRequestId();
+
+        CallSession session = new CallSession(callId, caller, receiver, requestId);
+        session.setCallerUserId(callerUserId);
+        session.setReceiverUserId(receiverUserId);
+        return sessionRepository.save(session);
+    }
+
+    // ── Developer Utilities ────────────────────────────────────────────────────
+
+    /** Purge all call sessions and analysis data; reset ID sequence to 1000. */
+    public void clearAllData() {
+        sessionRepository.clear();
+        analysisRepository.clear();
+        callIdSequence.set(1000);
+    }
+
+    /** Delete a single call session by callId. Returns false if not found. */
+    public boolean deleteCall(String callId) {
+        if (!sessionRepository.existsById(callId)) {
+            return false;
+        }
+        sessionRepository.deleteById(callId);
+        return true;
+    }
+
+    /** Seed a standard demo call for immediate testing after a reset. */
+    public CallSession seedDemoCall() {
+        String callId = "CALL-" + callIdSequence.incrementAndGet();
+        CallSession demo = new CallSession(callId, "Muthu (Demo)", "Friend (Demo)", "SEED-REQUEST");
+        demo.setCallerUserId("USER-DEMO-A");
+        demo.setReceiverUserId("USER-DEMO-B");
+        return sessionRepository.save(demo);
+    }
+
+    /** Return live counts for the developer stats panel. */
+    public Map<String, Object> getStats() {
+        long sessions = sessionRepository.count();
+        Map<String, Object> stats = new java.util.LinkedHashMap<>();
+        stats.put("totalSessions", sessions);
+        stats.put("callIdSequence", callIdSequence.get());
+        stats.put("timestamp", Instant.now().toString());
+        return stats;
     }
 }

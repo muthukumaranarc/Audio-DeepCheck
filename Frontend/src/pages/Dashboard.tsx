@@ -14,24 +14,41 @@ import {
   Layers,
   ShieldCheck,
   Radio,
-  FileText
+  FileText,
+  Server,
+  Database,
+  Cpu,
+  RefreshCw,
+  X,
+  Upload
 } from 'lucide-react';
 import { StatusBadge, DecisionBadge } from '../components/common/Badge';
 import {
-  mockMetrics,
   mockCallVolumeData,
   mockDetectionDistribution,
-  mockLiveCalls,
-  mockRecentActivity
 } from '../services/mockData';
 import { CallRecord } from '../types';
+import { useLiveDashboard } from '../hooks/useLiveDashboard';
+import { AudioFileVerifier } from '../components/common/AudioFileVerifier';
+
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [volumeFilter, setVolumeFilter] = useState('Last 7 Days');
   const [selectedCall, setSelectedCall] = useState<CallRecord | null>(null);
+  const [showVerifier, setShowVerifier] = useState(false);
 
-  // Calculate coordinates for Donut chart
+  const {
+    metrics,
+    health,
+    alerts,
+    activeCalls,
+    connectionState,
+    refresh,
+    dismissAlert,
+  } = useLiveDashboard();
+
+  // Donut chart distribution data
   const donutData = [
     { label: 'Human', count: mockDetectionDistribution.human.count, pct: mockDetectionDistribution.human.percentage, color: '#10B981' },
     { label: 'AI Generated', count: mockDetectionDistribution.aiGenerated.count, pct: mockDetectionDistribution.aiGenerated.percentage, color: '#8B5CF6' },
@@ -39,13 +56,94 @@ export const Dashboard: React.FC = () => {
     { label: 'No Decision', count: mockDetectionDistribution.noDecision.count, pct: mockDetectionDistribution.noDecision.percentage, color: '#C7D2FE' }
   ];
 
-  // Circumference for stroke-dasharray (r = 58)
   const radius = 58;
-  const circumference = 2 * Math.PI * radius; // ~ 364.42
+  const circumference = 2 * Math.PI * radius;
   let accumulatedPercent = 0;
 
   return (
     <div className="space-y-6">
+      {/* 0. SYSTEM HEALTH & LIVE TELEMETRY BAR */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <span className="font-bold text-slate-900 flex items-center gap-1.5">
+            <Radio className="w-4 h-4 text-emerald-600 animate-pulse" />
+            Infrastructure Health:
+          </span>
+
+          {/* Backend Status */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-xl">
+            <Server className="w-3.5 h-3.5 text-indigo-500" />
+            <span className="font-medium text-slate-700">Spring Boot:</span>
+            <span
+              className={`font-bold ${
+                health.components.backend === 'UP' ? 'text-emerald-600' : 'text-rose-600'
+              }`}
+            >
+              {health.components.backend}
+            </span>
+          </div>
+
+          {/* AI Service Status */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-xl">
+            <Cpu className="w-3.5 h-3.5 text-purple-500" />
+            <span className="font-medium text-slate-700">FastAPI AI:</span>
+            <span
+              className={`font-bold ${
+                health.components.aiService === 'UP' ? 'text-emerald-600' : 'text-rose-600'
+              }`}
+            >
+              {health.components.aiService}
+            </span>
+          </div>
+
+          {/* Database Status */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-xl">
+            <Database className="w-3.5 h-3.5 text-blue-500" />
+            <span className="font-medium text-slate-700">MongoDB:</span>
+            <span
+              className={`font-bold ${
+                health.components.database === 'UP' ? 'text-emerald-600' : 'text-rose-600'
+              }`}
+            >
+              {health.components.database}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold border ${
+              connectionState === 'connected'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : connectionState === 'reconnecting'
+                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                : 'bg-rose-50 text-rose-700 border-rose-200'
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                connectionState === 'connected'
+                  ? 'bg-emerald-500 animate-pulse'
+                  : connectionState === 'reconnecting'
+                  ? 'bg-amber-500 animate-ping'
+                  : 'bg-rose-500'
+              }`}
+            />
+            <span className="text-[10px] uppercase font-bold tracking-wider">
+              Telemetry {connectionState}
+            </span>
+          </div>
+
+          <button
+            onClick={() => refresh()}
+            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors"
+            title="Refresh System Metrics"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
       {/* 1. TOP STAT CARDS (4 Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Active Calls */}
@@ -66,11 +164,11 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              {mockMetrics.activeCalls.count}
+              {metrics.activeCalls.count}
             </h3>
             <p className="text-xs text-slate-400 mt-1 font-medium flex items-center gap-1.5">
               <span className="text-[#10B981] font-semibold flex items-center">
-                ↑ {mockMetrics.activeCalls.change}
+                ↑ {metrics.activeCalls.change}
               </span>
               <span>from last hour</span>
             </p>
@@ -95,11 +193,11 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              {mockMetrics.analyzing.count}
+              {metrics.analyzing.count}
             </h3>
             <p className="text-xs text-slate-400 mt-1 font-medium flex items-center gap-1.5">
               <span className="text-[#10B981] font-semibold flex items-center">
-                ↑ {mockMetrics.analyzing.change}
+                ↑ {metrics.analyzing.change}
               </span>
               <span>from last hour</span>
             </p>
@@ -124,11 +222,11 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              {mockMetrics.completed.count}
+              {metrics.completed.count}
             </h3>
             <p className="text-xs text-slate-400 mt-1 font-medium flex items-center gap-1.5">
               <span className="text-purple-600 font-semibold flex items-center">
-                ↑ {mockMetrics.completed.change}
+                ↑ {metrics.completed.change}
               </span>
               <span>from last hour</span>
             </p>
@@ -153,11 +251,11 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              {mockMetrics.needsAttention.count}
+              {metrics.needsAttention.count}
             </h3>
             <p className="text-xs text-slate-400 mt-1 font-medium flex items-center gap-1.5">
               <span className="text-[#EF4444] font-semibold flex items-center">
-                ↑ {mockMetrics.needsAttention.change}
+                ↑ {metrics.needsAttention.change}
               </span>
               <span>from last hour</span>
             </p>
@@ -198,168 +296,145 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Stacked Bar Chart Graphic */}
-          <div className="relative pt-2">
-            {/* Horizontal Gridlines & Y-Axis */}
-            <div className="flex flex-col justify-between h-48 text-[11px] text-slate-400 pr-2 select-none">
-              {[40, 30, 20, 10, 0].map((val) => (
-                <div key={val} className="flex items-center gap-3 w-full">
-                  <span className="w-5 text-right shrink-0">{val}</span>
-                  <div className="flex-1 border-b border-slate-100 border-dashed"></div>
-                </div>
-              ))}
-            </div>
+          <div className="h-44 flex items-end justify-between gap-2 pt-4 px-2">
+            {mockCallVolumeData.map((d) => {
+              const maxVal = 40;
+              const humanHeight = (d.human / maxVal) * 100;
+              const aiHeight = (d.aiGenerated / maxVal) * 100;
 
-            {/* Bars */}
-            <div className="absolute inset-x-0 bottom-0 top-2 ml-10 flex items-end justify-between px-4">
-              {mockCallVolumeData.map((item, idx) => {
-                const maxVal = 40;
-                const humanHeight = (item.human / maxVal) * 100;
-                const aiHeight = (item.aiGenerated / maxVal) * 100;
-
-                return (
-                  <div key={idx} className="flex flex-col items-center flex-1 group">
-                    {/* Tooltip on hover */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-slate-900 text-white text-[10px] rounded-lg px-2 py-1 pointer-events-none shadow-md whitespace-nowrap z-20">
-                      Human: {item.human} | AI: {item.aiGenerated}
-                    </div>
-
-                    {/* Bar stack */}
-                    <div className="w-6 sm:w-8 flex flex-col-reverse items-center">
-                      {/* Human portion (bottom, green) */}
-                      <div
-                        style={{ height: `${(item.human / 40) * 180}px` }}
-                        className="w-full bg-[#10B981] rounded-b-md transition-all group-hover:brightness-95"
-                      ></div>
-                      {/* AI Generated portion (top, purple) */}
-                      <div
-                        style={{ height: `${(item.aiGenerated / 40) * 180}px` }}
-                        className="w-full bg-[#8B5CF6]/90 rounded-t-md transition-all group-hover:brightness-95"
-                      ></div>
-                    </div>
-
-                    <span className="text-[11px] font-medium text-slate-500 mt-3">
-                      {item.day}
-                    </span>
+              return (
+                <div key={d.day} className="flex-1 flex flex-col items-center gap-2 group">
+                  <div className="w-full max-w-[28px] h-32 flex flex-col justify-end gap-1 relative">
+                    <div
+                      style={{ height: `${aiHeight}%` }}
+                      className="w-full bg-[#8B5CF6] rounded-t-md opacity-90 group-hover:opacity-100 transition-opacity"
+                    />
+                    <div
+                      style={{ height: `${humanHeight}%` }}
+                      className="w-full bg-[#10B981] rounded-b-md opacity-90 group-hover:opacity-100 transition-opacity"
+                    />
                   </div>
-                );
-              })}
-            </div>
+                  <span className="text-[11px] font-medium text-slate-400">{d.day}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Right: AI Detection Distribution */}
+        {/* Right: AI Detection Distribution (Donut Chart) */}
         <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-card flex flex-col justify-between">
-          <div className="flex items-center gap-2 mb-4">
-            <Target className="w-4 h-4 text-[#10B981]" />
-            <h2 className="text-sm font-bold text-slate-900">AI Detection Distribution</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-[#8B5CF6]" />
+              <h2 className="text-sm font-bold text-slate-900">AI Detection Distribution</h2>
+            </div>
+            <span className="text-xs font-semibold text-slate-400">
+              Total: {mockDetectionDistribution.totalCalls} Calls
+            </span>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-around gap-6 my-auto">
-            {/* Donut Chart SVG */}
-            <div className="relative w-40 h-40 flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 140 140">
-                {donutData.map((slice, index) => {
-                  const dashLength = (slice.pct / 100) * circumference;
-                  const dashOffset = (accumulatedPercent / 100) * circumference;
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
+            {/* SVG Donut */}
+            <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 140 140">
+                {donutData.map((slice) => {
+                  const strokeLength = (slice.pct / 100) * circumference;
+                  const offset = (accumulatedPercent / 100) * circumference;
                   accumulatedPercent += slice.pct;
 
                   return (
                     <circle
-                      key={index}
+                      key={slice.label}
                       cx="70"
                       cy="70"
                       r={radius}
                       fill="transparent"
                       stroke={slice.color}
-                      strokeWidth="18"
-                      strokeDasharray={`${dashLength} ${circumference}`}
-                      strokeDashoffset={-dashOffset}
-                      className="transition-all duration-500 hover:opacity-90"
+                      strokeWidth="16"
+                      strokeDasharray={`${strokeLength} ${circumference}`}
+                      strokeDashoffset={-offset}
+                      className="transition-all duration-500"
                     />
                   );
                 })}
               </svg>
-
-              {/* Center Text inside Donut */}
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-2xl font-extrabold text-slate-900">
+                <span className="text-2xl font-black text-slate-900 tracking-tight">
                   {mockDetectionDistribution.totalCalls}
                 </span>
-                <span className="text-[11px] font-medium text-slate-400 -mt-0.5">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">
                   Total Calls
                 </span>
               </div>
             </div>
 
             {/* Donut Legend */}
-            <div className="space-y-3">
-              {donutData.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3 text-xs">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: item.color }}
-                  ></span>
-                  <span className="text-slate-600 font-medium min-w-[85px]">{item.label}</span>
-                  <span className="text-slate-900 font-bold">
-                    {item.count}{' '}
-                    <span className="text-slate-400 font-normal text-[11px]">
-                      ({item.pct}%)
-                    </span>
+            <div className="space-y-2.5 w-full sm:w-auto text-xs">
+              {donutData.map((item) => (
+                <div key={item.label} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-slate-600 font-medium">{item.label}</span>
+                  </div>
+                  <span className="font-bold text-slate-800">
+                    {item.count} ({item.pct}%)
                   </span>
                 </div>
               ))}
             </div>
           </div>
+
+          <p className="text-[11px] text-slate-400 text-center mt-2">
+            Provisional neural detections cross-checked by 5-module fusion engine.
+          </p>
         </div>
       </div>
 
-      {/* 3. LOWER MIDDLE SECTION (Live Active Calls + Recent Activity) */}
+      {/* 3. LIVE MONITORING SECTION: Active Calls Table + Live Alerts Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Live Active Calls Table */}
+        {/* Left: Active Calls Table */}
         <div className="lg:col-span-8 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-card">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-xl bg-[#E8F8F0] flex items-center justify-center text-[#10B981]">
-                <Phone className="w-3.5 h-3.5" />
-              </div>
-              <h2 className="text-sm font-bold text-slate-900">Live Active Calls</h2>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E8F8F0] text-[#059669]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-ping"></span>
-                Live
+            <div className="flex items-center gap-2">
+              <Radio className="w-4 h-4 text-emerald-600 animate-pulse" />
+              <h2 className="text-sm font-bold text-slate-900">Live Active Streams</h2>
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                {activeCalls.length} Active
               </span>
             </div>
             <button
               onClick={() => navigate('/active-calls')}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
             >
-              View All <ArrowRight className="w-3.5 h-3.5" />
+              View Full Table <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-slate-100 text-slate-400 font-semibold">
-                  <th className="pb-3 pl-1 font-medium">Call ID</th>
-                  <th className="pb-3 font-medium">Caller</th>
-                  <th className="pb-3 font-medium">Receiver</th>
+                <tr className="border-b border-slate-100 text-slate-400">
+                  <th className="pb-3 pl-1 font-medium">Session ID</th>
+                  <th className="pb-3 font-medium">Participants</th>
                   <th className="pb-3 font-medium">Duration</th>
-                  <th className="pb-3 font-medium">Status</th>
-                  <th className="pb-3 font-medium">Latest Analysis</th>
-                  <th className="pb-3 text-right pr-2 font-medium">Actions</th>
+                  <th className="pb-3 font-medium">State</th>
+                  <th className="pb-3 font-medium">AI Verdict</th>
+                  <th className="pb-3 text-right pr-2 font-medium">Live Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80 text-slate-700">
-                {mockLiveCalls.map((call) => (
+                {activeCalls.slice(0, 5).map((call) => (
                   <tr key={call.callId} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 pl-1 font-semibold text-slate-900 flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${call.status === 'ACTIVE' || call.status === 'ANALYZING' ? 'bg-[#10B981]' : 'bg-blue-400'}`}></span>
-                      {call.callId}
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="font-mono">{call.callId}</span>
                     </td>
-                    <td className="py-3 font-medium text-slate-700">{call.caller}</td>
-                    <td className="py-3 text-slate-500">{call.receiver}</td>
-                    <td className="py-3 font-medium text-slate-600">{call.duration}</td>
+                    <td className="py-3">
+                      <p className="font-semibold text-slate-900 leading-tight">{call.caller}</p>
+                      <p className="text-[11px] text-slate-400 leading-tight">→ {call.receiver}</p>
+                    </td>
+                    <td className="py-3 font-mono font-medium text-slate-600">{call.duration}</td>
                     <td className="py-3">
                       <StatusBadge status={call.status} size="sm" />
                     </td>
@@ -367,20 +442,13 @@ export const Dashboard: React.FC = () => {
                       <DecisionBadge decision={call.latestAnalysis} size="sm" />
                     </td>
                     <td className="py-3 text-right pr-2">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => setSelectedCall(call)}
-                          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                          title="View Call Details"
+                          onClick={() => navigate(`/live-monitor/${call.callId}`)}
+                          className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-[11px] flex items-center gap-1 transition-colors"
                         >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => navigate('/evidence')}
-                          className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="Inspect AI Evidence"
-                        >
-                          <Activity className="w-3.5 h-3.5" />
+                          <Activity className="w-3 h-3" />
+                          <span>Monitor</span>
                         </button>
                       </div>
                     </td>
@@ -391,211 +459,107 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Recent Activity Feed */}
+        {/* Right: Real-Time Alerts Feed */}
         <div className="lg:col-span-4 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-card flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-slate-600" />
-                <h2 className="text-sm font-bold text-slate-900">Recent Activity</h2>
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                <h2 className="text-sm font-bold text-slate-900">Live Security Alerts</h2>
               </div>
-              <button
-                onClick={() => navigate('/call-history')}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-              >
-                View All <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              <span className="text-[10px] font-mono text-slate-400">
+                {alerts.length} Events
+              </span>
             </div>
 
-            <div className="space-y-4 mt-2">
-              {mockRecentActivity.map((activity) => {
-                let iconEl;
-                let bgClass = 'bg-blue-50 text-blue-600';
+            <div className="space-y-3 mt-2 max-h-80 overflow-y-auto pr-1">
+              {alerts.length === 0 ? (
+                <div className="py-8 text-center text-xs text-slate-400">
+                  No active diagnostic events.
+                </div>
+              ) : (
+                alerts.slice(0, 5).map((alert) => {
+                  const isDanger = alert.severity === 'danger';
+                  const isWarning = alert.severity === 'warning';
 
-                if (activity.type === 'completed' || activity.type === 'human') {
-                  bgClass = 'bg-[#E8F8F0] text-[#10B981]';
-                  iconEl = <CheckCircle2 className="w-4 h-4" />;
-                } else if (activity.type === 'warning') {
-                  bgClass = 'bg-rose-50 text-[#EF4444]';
-                  iconEl = <AlertTriangle className="w-4 h-4" />;
-                } else {
-                  bgClass = 'bg-blue-50 text-blue-600';
-                  iconEl = <Activity className="w-4 h-4" />;
-                }
+                  return (
+                    <div
+                      key={alert.id}
+                      className={`p-3 rounded-xl border text-xs relative group ${
+                        isDanger
+                          ? 'bg-rose-50/80 border-rose-200 text-rose-900'
+                          : isWarning
+                          ? 'bg-amber-50/80 border-amber-200 text-amber-900'
+                          : 'bg-slate-50 border-slate-200 text-slate-800'
+                      }`}
+                    >
+                      <button
+                        onClick={() => dismissAlert(alert.id)}
+                        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity"
+                        title="Dismiss"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
 
-                return (
-                  <div key={activity.id} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${bgClass}`}>
-                        {iconEl}
+                      <div className="flex items-center justify-between pr-4">
+                        <span className="font-bold">{alert.title}</span>
+                        <span className="text-[10px] font-mono opacity-70">
+                          {new Date(alert.timestamp).toLocaleTimeString()}
+                        </span>
                       </div>
-                      <div>
-                        <p className="font-bold text-slate-900">{activity.callId}</p>
-                        <p className="text-slate-500 text-[11px]">{activity.title}</p>
+                      <p className="mt-1 text-[11px] leading-snug opacity-90">{alert.message}</p>
+                      <div className="mt-1.5 flex items-center gap-2 text-[10px] font-mono opacity-75">
+                        <span>Session: {alert.callId}</span>
+                        <span>•</span>
+                        <span>{alert.type}</span>
                       </div>
                     </div>
-                    <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
-                      {activity.timeAgo}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
+
+          <button
+            onClick={() => navigate('/live-monitor')}
+            className="mt-4 w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+          >
+            <Radio className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Launch Two-User Monitor Demo (CALL-1001)</span>
+          </button>
         </div>
       </div>
 
-      {/* 4. BOTTOM ACTION CARDS (4 Cards) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Card 1: Multi-Module Evidence */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-card flex flex-col justify-between">
-          <div>
-            <div className="w-10 h-10 rounded-2xl bg-[#E8F8F0] flex items-center justify-center text-[#10B981] mb-3">
-              <Layers className="w-5 h-5" />
+      {/* 5. AUDIO FILE UPLOAD & VERIFICATION PANEL */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card overflow-hidden">
+        {/* Panel Header / Toggle */}
+        <button
+          onClick={() => setShowVerifier((v) => !v)}
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50/70 transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600">
+              <Upload className="w-4.5 h-4.5" />
             </div>
-            <h3 className="text-sm font-bold text-slate-900">Multi-Module Evidence</h3>
-            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-              Explore Wav2Vec2, AASIST, prosody and spectrogram neural forensic breakdown.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/evidence')}
-            className="mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-emerald-300 text-[#059669] bg-emerald-50/50 hover:bg-emerald-50 rounded-xl text-xs font-semibold transition-colors"
-          >
-            Inspect Evidence <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Card 2: Analysis Reports */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-card flex flex-col justify-between">
-          <div>
-            <div className="w-10 h-10 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 mb-3">
-              <BarChart2 className="w-5 h-5" />
+            <div className="text-left">
+              <h2 className="text-sm font-bold text-slate-900">Upload &amp; Verify Audio</h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">Analyze .mp3 or .wav files for AI-generated voice detection</p>
             </div>
-            <h3 className="text-sm font-bold text-slate-900">Analysis Reports</h3>
-            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-              View detailed analysis results, evidence breakdown, and download reports.
-            </p>
           </div>
-          <button
-            onClick={() => navigate('/reports')}
-            className="mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-purple-200 text-purple-600 bg-purple-50/40 hover:bg-purple-50 rounded-xl text-xs font-semibold transition-colors"
-          >
-            View Reports <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Card 3: Build a Safer World */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-card flex flex-col justify-between">
-          <div>
-            <div className="w-10 h-10 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 mb-3">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <h3 className="text-sm font-bold text-slate-900">Build a Safer World</h3>
-            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-              Help detect AI-generated voices and protect people from fraud and misinformation.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/help')}
-            className="mt-4 inline-flex items-center justify-center gap-1.5 px-4 py-2 border border-teal-200 text-teal-700 bg-teal-50/40 hover:bg-teal-50 rounded-xl text-xs font-semibold transition-colors"
-          >
-            Learn More <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Card 4: Mountain Graphic Quote */}
-        <div className="relative rounded-2xl overflow-hidden p-5 flex flex-col justify-between border border-slate-200/80 shadow-card bg-gradient-to-b from-blue-900 via-indigo-900 to-slate-950 text-white min-h-[170px]">
-          {/* Mountain Silhouette Background */}
-          <div className="absolute inset-0 opacity-40 bg-cover bg-center pointer-events-none">
-            <svg className="w-full h-full" viewBox="0 0 300 200" preserveAspectRatio="none" fill="none">
-              <path d="M0 160L80 90L150 140L210 70L300 170V200H0V160Z" fill="#1E293B" />
-              <path d="M40 180L120 120L190 160L250 100L300 150V200H40V180Z" fill="#0F172A" />
-              <path d="M100 130L150 70L190 110L240 60L300 130V200H100V130Z" fill="#334155" opacity="0.5" />
+          <div className={`w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 transition-transform ${showVerifier ? 'rotate-180' : ''}`}>
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
+        </button>
 
-          <div className="relative z-10">
-            <p className="text-xs italic font-medium leading-relaxed text-slate-100">
-              &ldquo;Technology should build trust, not doubt.&rdquo;
-            </p>
+        {/* Expandable Verifier Panel */}
+        {showVerifier && (
+          <div className="px-6 pb-6 border-t border-slate-100">
+            <AudioFileVerifier onClose={() => setShowVerifier(false)} />
           </div>
-          <div className="relative z-10 pt-4">
-            <p className="text-[11px] text-slate-400 font-medium">
-              — Audio DeepCheck
-            </p>
-          </div>
-        </div>
+        )}
       </div>
-
-      {/* Quick Call Details Modal */}
-      {selectedCall && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Radio className="w-4 h-4 text-emerald-500 animate-pulse" />
-                Live Call: {selectedCall.callId}
-              </h3>
-              <button
-                onClick={() => setSelectedCall(null)}
-                className="text-slate-400 hover:text-slate-700 text-sm font-bold p-1"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-4 space-y-3 text-xs">
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">Caller:</span>
-                <span className="font-semibold text-slate-800">{selectedCall.caller}</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">Receiver:</span>
-                <span className="font-semibold text-slate-800">{selectedCall.receiver}</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">Duration:</span>
-                <span className="font-semibold text-slate-800">{selectedCall.duration}</span>
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">Status:</span>
-                <StatusBadge status={selectedCall.status} size="sm" />
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">Latest Master Decision:</span>
-                <DecisionBadge decision={selectedCall.latestAnalysis} size="sm" />
-              </div>
-              <div className="flex justify-between py-1.5 border-b border-slate-50">
-                <span className="text-slate-500">Conflict Level:</span>
-                <span className="font-semibold text-emerald-600">{selectedCall.conflictLevel || 'LOW'}</span>
-              </div>
-              <div className="flex justify-between py-1.5">
-                <span className="text-slate-500">Signal Quality:</span>
-                <span className="font-semibold text-emerald-600">GOOD (Score: {selectedCall.qualityScore || 0.85})</span>
-              </div>
-            </div>
-
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => {
-                  setSelectedCall(null);
-                  navigate('/evidence');
-                }}
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-colors"
-              >
-                Inspect AI Evidence
-              </button>
-              <button
-                onClick={() => setSelectedCall(null)}
-                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -10,15 +10,15 @@
 
 | Attribute | Details |
 | :--- | :--- |
-| **Current Stage** | **Milestone 10 Complete** (Database Integration & Persistence: MongoDB Document Modeling, Optimized Indices, Active/History Queries, Health Probing, Embedded & Atlas Support, 59 Passing Tests & Performance Benchmarks) |
-| **Active Detectors & Evidence Sources** | 1. Wav2Vec2 Large XLSR Anti-Spoofing & Deepfake Classifier (`INT8` ONNX)<br>2. DF Arena 500M Universal Anti-Spoofing Detector (`Speech-Arena-2025/DF_Arena_500M_V_1`, PyTorch CPU)<br>3. Spectrogram Analysis Evidence Layer (`SpectrogramService`: STFT + Mel-Spectrogram + 10 Spectral Features + Visual Plots)<br>4. Prosody / F0 Evidence Layer (`ProsodyService`: pYIN F0 Tracking + 7 Prosodic Feature Groups + Visual Plots)<br>5. Speech Representation Specialist (`WhisperRepService`: `openai/whisper-tiny` 384-d acoustic/linguistic encoder representations, flux, dispersion)<br>6. Signal Quality & Telephony Gate (`QualityService`: SNR, Bandwidth, Clipping, Silence, Voicing)<br>7. Evidence Normalizer & Calibration Registry (`EvidenceNormalizer`, `CalibrationRegistry`: Signed scale `[-1.0, +1.0]`)<br>8. Master Decision & Fusion Engine (`FusionService`: Sliding 5s/2.5s chunks, 10% Trimmed Mean, Conflict & Uncertainty Arbitration)<br>9. Production FastAPI REST Service (`AI-Model/app/main.py`, `app/api/routes.py`: `/api/v1/health`, `/api/v1/analyze`, concurrency semaphore, secure temp-file lifecycle)<br>10. Spring Boot Application Backend (`Backend/`: Spring Boot 3.3.4, RestClient FastAPI client, call session state machine, 11 REST endpoints, request correlation `X-Request-ID`, sanitized error translation)<br>11. Enterprise Persistence Layer (`Backend/`: Spring Data MongoDB, `CallSessionDocument`, `AnalysisResultDocument`, compound dashboard indices, health probe, sub-11ms latency) |
-| **Inference & Analysis Engines** | ONNX Runtime (`CPUExecutionProvider`) for Wav2Vec2; PyTorch CPU for DF Arena 500M & Whisper Tiny; Librosa + SciPy + Matplotlib (`Agg`) for Spectrograms, Prosody & Quality; Mutagen + SciPy for Watermark; FastAPI + Uvicorn + Pydantic v2 for REST API; Spring Boot 3.3.4 + RestClient + Spring Data MongoDB for Backend |
-| **Supported Audio Formats** | `.wav`, `.mp3`, `.flac`, `.ogg` |
-| **Target Audio Spec** | Mono, 16,000 Hz, Float32 (5.0s window, 2.5s hop chunking with fixed padding) |
-| **Automated Tests** | **151 / 151 Passing** (100% pass rate: 92 in `AI-Model/` + 59 in `Backend/`) |
+| **Current Stage** | **Milestone 14 Complete** (Full End-to-End System Verification: Complete cross-tier validation across CallSimulator, Spring Boot Backend, FastAPI AI Service, MongoDB persistence, and SecOps Live Dashboard. Fault-injection tests covering FastAPI offline non-blocking relay, automatic AI recovery, backpressure queue bounding (N=4) with drop-oldest, call-end residual audio flush (>=1s evaluated, <1s discarded), call rejection/cancel terminal states, browser refresh recovery, degraded signal quality gating, and signed directional contributions. 40/40 Frontend + 88/88 Backend + 37/37 CallSimulator + 92/92 AI-Model tests) |
+| **Active Detectors & Evidence Sources** | 1. Wav2Vec2 Large XLSR Anti-Spoofing & Deepfake Classifier (`INT8` ONNX)<br>2. DF Arena 500M Universal Anti-Spoofing Detector (`Speech-Arena-2025/DF_Arena_500M_V_1`, PyTorch CPU)<br>3. Spectrogram Analysis Evidence Layer (`SpectrogramService`: STFT + Mel-Spectrogram + 10 Spectral Features + Visual Plots)<br>4. Prosody / F0 Evidence Layer (`ProsodyService`: pYIN F0 Tracking + 7 Prosodic Feature Groups + Visual Plots)<br>5. Speech Representation Specialist (`WhisperRepService`: `openai/whisper-tiny` 384-d acoustic/linguistic encoder representations, flux, dispersion)<br>6. Signal Quality & Telephony Gate (`QualityService`: SNR, Bandwidth, Clipping, Silence, Voicing)<br>7. Evidence Normalizer & Calibration Registry (`EvidenceNormalizer`, `CalibrationRegistry`: Signed scale `[-1.0, +1.0]`)<br>8. Master Decision & Fusion Engine (`FusionService`: Sliding 5s/2.5s chunks, 10% Trimmed Mean, Conflict & Uncertainty Arbitration)<br>9. Production FastAPI REST Service (`AI-Model/app/main.py`, `app/api/routes.py`: `/api/v1/health`, `/api/v1/analyze`, concurrency semaphore, secure temp-file lifecycle)<br>10. Spring Boot Application Backend (`Backend/`: Spring Boot 3.3.4, RestClient FastAPI client, call session state machine, 11 REST endpoints, request correlation `X-Request-ID`, sanitized error translation)<br>11. Enterprise Persistence Layer (`Backend/`: Spring Data MongoDB, `CallSessionDocument`, `AnalysisResultDocument`, compound dashboard indices, health probe, sub-11ms latency)<br>12. Real-Time Call Simulator & Two-User Streaming (`CallSimulator/` + `Backend/`: Spring WebSocket `/ws/call`, 35-byte binary frames, user presence registry, scheduled Web Audio PCM16 playback, dual visualizers, decoupled AI windowing)<br>13. Live Analytics Dashboard & Telephony Monitor (`Frontend/`: Operations Center, dedicated dual-participant monitor `/live-monitor`, segregated timeline lanes, 5-model AI telemetry, quality diagnostics, stale-event protected WebSocket)<br>14. End-to-End Resilience & Verification Suite (Full fault-injection suites, backpressure bounding, residual flushing, browser recovery, 257/257 passing tests across all 4 sub-projects) |
+| **Inference & Analysis Engines** | ONNX Runtime (`CPUExecutionProvider`) for Wav2Vec2; PyTorch CPU for DF Arena 500M & Whisper Tiny; Librosa + SciPy + Matplotlib (`Agg`) for Spectrograms, Prosody & Quality; Mutagen + SciPy for Watermark; FastAPI + Uvicorn + Pydantic v2 for REST API; Spring Boot 3.3.4 + Spring WebSocket + Spring Data MongoDB for Backend; Web Audio API for Call Simulator; React 18 + Vite + Tailwind for Dashboard |
+| **Supported Audio Formats** | `.wav`, `.mp3`, `.flac`, `.ogg`, raw PCM16 binary WebSocket frames |
+| **Target Audio Spec** | Mono, 16,000 Hz, Float32 / PCM16 (5.0s window, 2.5s hop chunking with fixed padding; 128ms / 2048-sample WebSocket streaming frames) |
+| **Automated Tests** | **257 / 257 Passing** (100% pass rate: 40 in `Frontend/` + 88 in `Backend/` + 37 in `CallSimulator/` + 92 in `AI-Model/`) |
 | **AASIST Status** | **Superseded & Cleanly Removed** |
 | **Evidence Discipline** | **Zero False Calls via Conflict Arbitration & Extreme Anti-Overfitting Discipline** — No learned classifier trained on the 8 benchmark samples; explicit signed scale $[-1.0, +1.0]$; non-probability decision strength; conflict-gated UNCERTAIN fallback preventing false fraud accusations |
-| **Last Updated** | 2026-09-18 |
+| **Last Updated** | 2026-09-19 |
 
 ---
 
@@ -218,6 +218,38 @@
 * **Automated Test Suite**:
   - **59 / 59 Passing** in `Backend/` (11 domain tests, 12 CallController tests, 1 HealthController test, 4 BackendHealthService tests, 4 CallAnalysisService tests, 8 CallSessionService tests, 1 CallFlow integration test, 8 MongoPersistence integration tests, 1 MongoPerformance benchmark test).
 
+### 2.12 Mobile Call Simulator Frontend (`CallSimulator/`)
+* **Core Application**:
+  - Responsive smartphone simulator interface built with React 18, TypeScript, Vite, and Tailwind CSS.
+  - Form-factor casing with dynamic island notch, top status bar (live time, Wi-Fi, battery), and bottom home indicator.
+* **Call Session State Machine (`useCallSession.ts`)**:
+  - Full client-side state machine aligned with Spring Boot: `IDLE` $\rightarrow$ `CREATING_CALL` $\rightarrow$ `CONNECTING` $\rightarrow$ `ACTIVE` $\rightarrow$ `ENDING` $\rightarrow$ `COMPLETED`.
+  - Failure states: `CREATE_FAILED`, `CONNECT_FAILED`, `MIC_PERMISSION_DENIED`, `MIC_PERMISSION_BLOCKED`, `NETWORK_INTERRUPTED`, `END_FAILED`.
+  - State guards preventing illegal actions (cannot double-call or end idle calls).
+* **Spring Boot REST Client (`CallApiService.ts`)**:
+  - Strictly typed client consuming verified endpoints:
+    - `POST /api/v1/calls` (Create session)
+    - `POST /api/v1/calls/{id}/start` (Transition to `ACTIVE`)
+    - `POST /api/v1/calls/{id}/end` (End session)
+    - `GET /api/v1/calls/{id}` (Fetch call status and report)
+    - `GET /api/v1/calls` (Recent call history)
+    - `GET /api/v1/health` (Backend connectivity probe)
+  - Correlation tracing: Attaches unique `X-Request-ID` to all outbound requests.
+* **Microphone Permission Handling (`useMicrophonePermission.ts`)**:
+  - Browser permissions API integration tracking `UNKNOWN`, `REQUESTING`, `GRANTED`, `DENIED`, `BLOCKED`.
+  - Actionable guidance and retry button after denial.
+* **Audio Capture Abstraction (`AudioCaptureService.ts`)**:
+  - Standard Web Audio API capture requesting 16,000 Hz mono Float32 audio with hardware AEC, NS, and AGC.
+  - Dispatches ordered `AudioDataChunk` (sequence, timestamp, duration, float32 samples, RMS level) to listeners.
+  - Zero network transport code: Clean separation boundary for Milestone 12 (`AudioCaptureService` $\rightarrow$ `AudioStreamingService`).
+* **Local Audio Activity Indicator (`AudioVisualizer.tsx`)**:
+  - 16-bar responsive equalizer animated via `requestAnimationFrame` reflecting real-time physical voice volume.
+  - Explicit disclaimer: Clearly labeled as local hardware volume, not an AI score or fraud verdict.
+* **Guaranteed Hardware Cleanup**:
+  - Stops every `MediaStreamTrack` and closes `AudioContext` on normal end, navigation away, permission denial, or component unmount.
+* **Automated Tests**:
+  - **23 / 23 Passing** Vitest tests across API service, state machine transitions, audio capture lifecycle, microphone permission handling, and network connectivity.
+
 
 ---
 
@@ -340,6 +372,10 @@ Following `AI-Model/AI_MODEL_DEVELOPMENT_PLAN.md`:
 | **8** | **FastAPI Service** | `COMPLETED` | Production REST API (`/health`, `/analyze`), concurrency guard, temp file security, 92/92 passing tests |
 | **9** | **Spring Boot Backend Foundation** | `COMPLETED` | Spring Boot 3.3.4 app, RestClient FastAPI client, call session state machine, 11 REST endpoints, request tracing, 48/48 passing tests |
 | **10** | **Database Integration & Persistence** | `COMPLETED` | Enterprise MongoDB integration, document modeling (`call_sessions`, `analysis_results`), compound dashboard indexing, active/history queries, health probing, 59/59 passing tests, <11ms benchmarks |
+| **11** | **Mobile Call Simulator Frontend** | `COMPLETED` | Standalone phone simulator app (`CallSimulator/`), Web Audio API capture, state machine, dialer keypad, local audio meter, verified hardware cleanup, 23/23 tests |
+| **12** | **Two-User Call Streaming & WebSocket** | `COMPLETED` | Full-duplex WebSocket audio streaming (`/ws/call`), 35-byte binary audio frames, dual-user call simulation (User A Muthu ↔ User B Friend), voice relay (<15ms), 5.0s/2.5s windowing, 79/79 Backend + 32/32 Simulator tests |
+| **13** | **Live Analytics Dashboard & SecOps Monitor** | `COMPLETED` | React/Vite SecOps Dashboard (`Frontend/`), dual-participant live call monitor (`/live-monitor`), segregated timeline lanes, 5-model AI telemetry, quality diagnostics, backpressure alerts, 35/35 tests |
+| **14** | **Full End-to-End System Verification** | `COMPLETED` | Rigorous resilience & fault injection (FastAPI offline relay, auto-recovery, backpressure queue bounding N=4, residual audio flush, call rejection/cancel states, browser refresh recovery, signed scale discipline), 257/257 passing tests across all 4 sub-projects |
 
 ---
 

@@ -33,6 +33,15 @@ public class CallSession {
     private String failureReason;
     private String requestId;
 
+    // Milestone 12: Two-User Simulation, Participant Identity, Sequencing & Backpressure
+    private String callerUserId;
+    private String receiverUserId;
+    private String callerSessionId;
+    private String receiverSessionId;
+    private int callerLastSequence = -1;
+    private int receiverLastSequence = -1;
+    private boolean backpressureDetected = false;
+
     public CallSession(String callId, String caller, String receiver) {
         this(callId, caller, receiver, null);
     }
@@ -48,15 +57,93 @@ public class CallSession {
     }
 
     /**
-     * Start the call, moving from CREATED or CONNECTING to ACTIVE.
+     * Transition call from CREATED to RINGING.
+     */
+    public synchronized void ring() {
+        if (status != CallStatus.CREATED) {
+            throw new InvalidCallStateException(
+                    "Cannot ring call " + callId + " from state " + status + ". Expected CREATED.");
+        }
+        this.status = CallStatus.RINGING;
+    }
+
+    /**
+     * Transition call from RINGING (or CREATED) to ACCEPTED.
+     */
+    public synchronized void accept() {
+        // Idempotent: already accepted or active — no-op
+        if (status == CallStatus.ACCEPTED || status == CallStatus.ACTIVE
+                || status == CallStatus.CONNECTING_MEDIA) {
+            return;
+        }
+        if (status != CallStatus.RINGING && status != CallStatus.CREATED) {
+            throw new InvalidCallStateException(
+                    "Cannot accept call " + callId + " from state " + status + ". Expected RINGING or CREATED.");
+        }
+        this.status = CallStatus.ACCEPTED;
+    }
+
+    /**
+     * Transition call to CONNECTING_MEDIA.
+     */
+    public synchronized void connectMedia() {
+        if (status != CallStatus.ACCEPTED && status != CallStatus.CONNECTING && status != CallStatus.CREATED) {
+            throw new InvalidCallStateException(
+                    "Cannot connect media for call " + callId + " from state " + status);
+        }
+        this.status = CallStatus.CONNECTING_MEDIA;
+    }
+
+    /**
+     * Start the call, moving to ACTIVE.
      */
     public synchronized void start(Instant startedAt) {
-        if (status != CallStatus.CREATED && status != CallStatus.CONNECTING) {
+        if (status != CallStatus.CREATED && status != CallStatus.CONNECTING 
+                && status != CallStatus.RINGING && status != CallStatus.ACCEPTED 
+                && status != CallStatus.CONNECTING_MEDIA) {
             throw new InvalidCallStateException(
-                    "Cannot start call " + callId + " from state " + status + ". Expected CREATED or CONNECTING.");
+                    "Cannot start call " + callId + " from state " + status);
         }
         this.status = CallStatus.ACTIVE;
         this.startedAt = startedAt != null ? startedAt : Instant.now();
+    }
+
+    /**
+     * Transition call from CREATED/RINGING to REJECTED.
+     */
+    public synchronized void reject(String reason) {
+        if (status.isTerminal()) {
+            throw new InvalidCallStateException("Cannot reject call " + callId + " in terminal state " + status);
+        }
+        this.status = CallStatus.REJECTED;
+        this.endReason = reason != null ? reason : "USER_REJECTED";
+        if (this.endedAt == null) {
+            this.endedAt = Instant.now();
+        }
+    }
+
+    /**
+     * Transition call to CANCELLED.
+     */
+    public synchronized void cancel(String reason) {
+        if (status.isTerminal()) {
+            throw new InvalidCallStateException("Cannot cancel call " + callId + " in terminal state " + status);
+        }
+        this.status = CallStatus.CANCELLED;
+        this.endReason = reason != null ? reason : "USER_CANCELLED";
+        if (this.endedAt == null) {
+            this.endedAt = Instant.now();
+        }
+    }
+
+    /**
+     * Mark call as ENDING (stopping new media frames while flushing AI buffer).
+     */
+    public synchronized void markEnding() {
+        if (status != CallStatus.ACTIVE && status != CallStatus.ANALYZING) {
+            return;
+        }
+        this.status = CallStatus.ENDING;
     }
 
     /**
@@ -129,9 +216,9 @@ public class CallSession {
      * Complete the call session after all processing has finished.
      */
     public synchronized void complete() {
-        if (status != CallStatus.ENDED && status != CallStatus.ANALYZING && status != CallStatus.ACTIVE) {
+        if (status != CallStatus.ENDED && status != CallStatus.ENDING && status != CallStatus.ANALYZING && status != CallStatus.ACTIVE) {
             throw new InvalidCallStateException(
-                    "Cannot complete call " + callId + " from state " + status + ". Call must be ENDED or ACTIVE.");
+                    "Cannot complete call " + callId + " from state " + status + ". Call must be ENDED, ENDING or ACTIVE.");
         }
         if (this.endedAt == null) {
             this.endedAt = Instant.now();
@@ -150,6 +237,7 @@ public class CallSession {
     public synchronized void fail(String reason) {
         this.status = CallStatus.FAILED;
         this.failureReason = reason;
+        this.endReason = reason;
         if (this.endedAt == null) {
             this.endedAt = Instant.now();
         }
@@ -167,7 +255,7 @@ public class CallSession {
         }
     }
 
-    // --- Getters ---
+    // --- Getters & Setters ---
 
     public String getCallId() { return callId; }
     public String getCaller() { return caller; }
@@ -195,6 +283,27 @@ public class CallSession {
     public String getEndReason() { return endReason; }
     public String getFailureReason() { return failureReason; }
     public String getRequestId() { return requestId; }
+
+    public String getCallerUserId() { return callerUserId; }
+    public void setCallerUserId(String callerUserId) { this.callerUserId = callerUserId; }
+
+    public String getReceiverUserId() { return receiverUserId; }
+    public void setReceiverUserId(String receiverUserId) { this.receiverUserId = receiverUserId; }
+
+    public String getCallerSessionId() { return callerSessionId; }
+    public void setCallerSessionId(String callerSessionId) { this.callerSessionId = callerSessionId; }
+
+    public String getReceiverSessionId() { return receiverSessionId; }
+    public void setReceiverSessionId(String receiverSessionId) { this.receiverSessionId = receiverSessionId; }
+
+    public int getCallerLastSequence() { return callerLastSequence; }
+    public void setCallerLastSequence(int callerLastSequence) { this.callerLastSequence = callerLastSequence; }
+
+    public int getReceiverLastSequence() { return receiverLastSequence; }
+    public void setReceiverLastSequence(int receiverLastSequence) { this.receiverLastSequence = receiverLastSequence; }
+
+    public boolean isBackpressureDetected() { return backpressureDetected; }
+    public void setBackpressureDetected(boolean backpressureDetected) { this.backpressureDetected = backpressureDetected; }
 
     public void setRequestId(String requestId) { this.requestId = requestId; }
     public void setLatestAnalysisStatus(String status) { this.latestAnalysisStatus = status; }

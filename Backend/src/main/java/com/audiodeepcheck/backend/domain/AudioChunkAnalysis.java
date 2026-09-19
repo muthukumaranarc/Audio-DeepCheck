@@ -19,4 +19,15 @@ public record AudioChunkAnalysis(
             timestamp = Instant.now();
         }
     }
+
+    public AudioChunkAnalysis(
+            int chunkIndex,
+            double startSec,
+            double endSec,
+            CallDecision decision,
+            double decisionStrength,
+            double qualityScore
+    ) {
+        this(chunkIndex, startSec, endSec, decision, decisionStrength, qualityScore, Instant.now());
+    }
 }

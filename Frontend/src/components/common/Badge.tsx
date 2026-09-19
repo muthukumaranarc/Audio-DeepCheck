@@ -4,14 +4,15 @@ import { CallStatus, DecisionType } from '../../types';
 interface BadgeProps {
   status?: CallStatus;
   decision?: DecisionType;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export const StatusBadge: React.FC<{ status: CallStatus; size?: 'sm' | 'md' }> = ({
+export const StatusBadge: React.FC<{ status: CallStatus; size?: 'sm' | 'md' | 'lg' }> = ({
   status,
   size = 'md'
 }) => {
-  const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-xs';
+  const sizeClasses =
+    size === 'sm' ? 'px-2 py-0.5 text-xs' : size === 'lg' ? 'px-3.5 py-1.5 text-sm font-semibold' : 'px-2.5 py-1 text-xs';
 
   switch (status) {
     case 'ACTIVE':
@@ -54,11 +55,12 @@ export const StatusBadge: React.FC<{ status: CallStatus; size?: 'sm' | 'md' }> =
   }
 };
 
-export const DecisionBadge: React.FC<{ decision: DecisionType; size?: 'sm' | 'md' }> = ({
+export const DecisionBadge: React.FC<{ decision: DecisionType; size?: 'sm' | 'md' | 'lg' }> = ({
   decision,
   size = 'md'
 }) => {
-  const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs';
+  const sizeClasses =
+    size === 'sm' ? 'px-2 py-0.5 text-xs' : size === 'lg' ? 'px-4 py-1.5 text-sm font-semibold' : 'px-3 py-1 text-xs';
 
   switch (decision) {
     case 'HUMAN':

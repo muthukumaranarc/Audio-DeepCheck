@@ -20,7 +20,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Active Calls', path: '/active-calls', icon: PhoneCall, badge: '3' },
+    { name: 'Active Calls', path: '/active-calls', icon: PhoneCall },
+    { name: 'Live Monitor', path: '/live-monitor', icon: Activity, badge: 'LIVE' },
     { name: 'Call History', path: '/call-history', icon: Clock },
     { name: 'Analysis Reports', path: '/reports', icon: BarChart3 },
     { name: 'Evidence Viewer', path: '/evidence', icon: Layers },
@@ -62,16 +63,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
         <nav className="mt-4 px-3 space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive =
+              item.path === '/'
+                ? location.pathname === '/'
+                : location.pathname.startsWith(item.path);
 
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
+                end={item.path === '/'}
                 onClick={onCloseMobile}
                 className={({ isActive: active }) =>
                   `relative flex items-center justify-between px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 ${
-                    active
+                    active || isActive
                       ? 'bg-[#E8F8F0] text-[#059669] font-semibold shadow-xs'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50/80'
                   }`
@@ -137,7 +142,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
         <div className="space-y-1">
           {bottomItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname.startsWith(item.path);
 
             return (
               <NavLink
@@ -146,7 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
                 onClick={onCloseMobile}
                 className={({ isActive: active }) =>
                   `flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                    active
+                    active || isActive
                       ? 'bg-slate-100 text-slate-900 font-semibold'
                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                   }`

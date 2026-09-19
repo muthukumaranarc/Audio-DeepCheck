@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Layers,
   Activity,
@@ -14,11 +15,58 @@ import {
 } from 'lucide-react';
 import { mockEvidenceModules, mockChunkTimeline } from '../services/mockData';
 import { DecisionBadge } from '../components/common/Badge';
+import { EvidenceModule } from '../types';
+import { api } from '../services/api';
+import { formatStrength, formatPercent, formatSec } from '../utils/formatters';
 
 export const EvidenceViewerPage: React.FC = () => {
-  const [selectedChunkIndex, setSelectedChunkIndex] = useState<number>(3);
+  const { callId: routeCallId } = useParams<{ callId?: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const queryCallId = searchParams.get('callId');
+  const activeCallId = routeCallId || queryCallId || 'CALL-1001';
 
-  const currentChunk = mockChunkTimeline[selectedChunkIndex] || mockChunkTimeline[0];
+  const [evidenceModules, setEvidenceModules] = useState<EvidenceModule[]>(mockEvidenceModules);
+  const [chunkTimeline, setChunkTimeline] = useState<any[]>(mockChunkTimeline);
+  const [conflictLevel, setConflictLevel] = useState<string>('LOW');
+  const [selectedChunkIndex, setSelectedChunkIndex] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+
+    Promise.all([
+      api.getCallEvidence(activeCallId),
+      api.getCallChunks(activeCallId)
+    ]).then(([evidenceRes, chunksRes]) => {
+      if (isMounted) {
+        if (evidenceRes && evidenceRes.modules && evidenceRes.modules.length > 0) {
+          setEvidenceModules(evidenceRes.modules);
+          setConflictLevel(evidenceRes.conflictLevel || 'LOW');
+        }
+        if (chunksRes && chunksRes.length > 0) {
+          setChunkTimeline(chunksRes);
+          setSelectedChunkIndex(Math.min(selectedChunkIndex, chunksRes.length - 1));
+        }
+        setIsLoading(false);
+      }
+    }).catch(() => {
+      if (isMounted) setIsLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeCallId]);
+
+  const currentChunk = chunkTimeline[selectedChunkIndex] || chunkTimeline[0] || {
+    chunkIndex: 0,
+    startSec: 0,
+    endSec: 5,
+    decision: 'UNCERTAIN',
+    decisionStrength: 0,
+  };
 
   return (
     <div className="space-y-6">
@@ -29,9 +77,14 @@ export const EvidenceViewerPage: React.FC = () => {
             <Layers className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Multi-Module AI Evidence Viewer</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-slate-900">Multi-Module AI Evidence Viewer</h1>
+              <span className="font-mono text-xs font-bold px-2 py-0.5 bg-slate-100 rounded text-slate-700 border border-slate-200">
+                {activeCallId}
+              </span>
+            </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Spring Boot GET /calls/CALL-1001/evidence & /chunks — Individual neural classifier analysis.
+              Spring Boot GET /api/v1/calls/{activeCallId}/evidence & /chunks — Individual neural classifier analysis.
             </p>
           </div>
         </div>
@@ -41,7 +94,7 @@ export const EvidenceViewerPage: React.FC = () => {
             Signal Quality: 92% (Clean)
           </span>
           <span className="text-xs font-semibold px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-200">
-            Model Conflict: LOW
+            Model Conflict: {conflictLevel}
           </span>
         </div>
       </div>
@@ -58,7 +111,7 @@ export const EvidenceViewerPage: React.FC = () => {
 
         {/* Timeline Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-          {mockChunkTimeline.map((chunk, idx) => {
+          {chunkTimeline.map((chunk, idx) => {
             const isSelected = selectedChunkIndex === idx;
             return (
               <button
@@ -73,7 +126,7 @@ export const EvidenceViewerPage: React.FC = () => {
                 <div className="flex items-center justify-between text-[11px] mb-1.5">
                   <span className="font-bold text-slate-800">Chunk {chunk.chunkIndex + 1}</span>
                   <span className="font-mono text-slate-400">
-                    {chunk.startSec.toFixed(1)}s
+                    {formatSec(chunk.startSec)}s
                   </span>
                 </div>
 
@@ -84,7 +137,7 @@ export const EvidenceViewerPage: React.FC = () => {
                 <div className="text-[10px] text-slate-500 flex justify-between">
                   <span>Score:</span>
                   <span className="font-mono font-bold text-slate-700">
-                    {chunk.decisionStrength > 0 ? `+${chunk.decisionStrength}` : chunk.decisionStrength}
+                    {formatStrength(chunk.decisionStrength)}
                   </span>
                 </div>
               </button>
@@ -97,14 +150,14 @@ export const EvidenceViewerPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-800">Inspecting Window:</span>
             <span className="font-mono bg-white px-2 py-0.5 rounded-md border border-slate-200 text-slate-700 font-semibold">
-              {currentChunk.startSec.toFixed(1)}s — {currentChunk.endSec.toFixed(1)}s
+              {formatSec(currentChunk.startSec)}s — {formatSec(currentChunk.endSec)}s
             </span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-slate-500">Verdict for this slice:</span>
             <DecisionBadge decision={currentChunk.decision} size="sm" />
             <span className="text-slate-500 font-mono">
-              (Strength: {currentChunk.decisionStrength})
+              (Strength: {formatStrength(currentChunk.decisionStrength)})
             </span>
           </div>
         </div>
@@ -112,7 +165,7 @@ export const EvidenceViewerPage: React.FC = () => {
 
       {/* 2. The 5 Evidence Modules Grid (Section 10 of spec) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {mockEvidenceModules.map((mod, index) => {
+        {evidenceModules.map((mod, index) => {
           const isSynthetic = mod.direction === 'SYNTHETIC';
           const isHuman = mod.direction === 'HUMAN';
 
@@ -150,7 +203,7 @@ export const EvidenceViewerPage: React.FC = () => {
                   <div className="flex justify-between text-[11px] text-slate-500 mb-1.5 font-medium">
                     <span>Fusion Contribution</span>
                     <span className="font-bold text-slate-900 font-mono">
-                      {(mod.contribution * 100).toFixed(0)}%
+                      {formatPercent(mod.contribution)}
                     </span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -158,7 +211,7 @@ export const EvidenceViewerPage: React.FC = () => {
                       className={`h-full rounded-full ${
                         isSynthetic ? 'bg-rose-500' : 'bg-emerald-500'
                       }`}
-                      style={{ width: `${mod.contribution * 250}%` }}
+                      style={{ width: `${Math.min(100, Math.abs(mod.contribution ?? 0) * 250)}%` }}
                     ></div>
                   </div>
                 </div>

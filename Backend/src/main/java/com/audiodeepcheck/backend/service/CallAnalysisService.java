@@ -93,7 +93,7 @@ public class CallAnalysisService {
 
         // Map AI result onto domain models
         CallDecision decision = parseDecision(aiResponse.masterDecision());
-        ConflictLevel conflict = parseConflictLevel(aiResponse.conflictLevel());
+        ConflictLevel conflict = parseConflictLevel(aiResponse.getEffectiveConflictLevel());
 
         AudioQuality quality = null;
         if (aiResponse.quality() != null) {
@@ -109,7 +109,7 @@ public class CallAnalysisService {
         session.recordAnalysisResult(
                 decision,
                 aiResponse.decisionStrength(),
-                aiResponse.syntheticEvidenceScore(),
+                aiResponse.getEffectiveSyntheticScore(),
                 conflict,
                 quality,
                 sequenceNumber,
@@ -121,9 +121,10 @@ public class CallAnalysisService {
         analysisRepository.saveFastApiResponse(callId, aiResponse);
 
         // Map and store chunk timeline
-        if (aiResponse.chunkDetails() != null && !aiResponse.chunkDetails().isEmpty()) {
+        List<FastApiAnalyzeDto.ChunkDetailDto> effectiveChunks = aiResponse.getEffectiveChunkDetails();
+        if (!effectiveChunks.isEmpty()) {
             List<AudioChunkAnalysis> chunkList = new ArrayList<>();
-            for (FastApiAnalyzeDto.ChunkDetailDto cd : aiResponse.chunkDetails()) {
+            for (FastApiAnalyzeDto.ChunkDetailDto cd : effectiveChunks) {
                 chunkList.add(new AudioChunkAnalysis(
                         cd.chunkIndex() != null ? cd.chunkIndex() : 0,
                         cd.startSec() != null ? cd.startSec() : 0.0,
@@ -138,21 +139,22 @@ public class CallAnalysisService {
         }
 
         // Map and store module evidence
-        if (aiResponse.modules() != null && !aiResponse.modules().isEmpty()) {
+        List<FastApiAnalyzeDto.ModuleDetailDto> effectiveModules = aiResponse.getEffectiveModuleList();
+        if (!effectiveModules.isEmpty()) {
             List<ModuleEvidence> evidenceList = new ArrayList<>();
-            aiResponse.modules().forEach((key, mod) -> {
+            for (var mod : effectiveModules) {
                 String direction = "NEUTRAL";
                 if (mod.syntheticScore() != null) {
                     direction = mod.syntheticScore() >= 0.5 ? "SYNTHETIC" : "HUMAN";
                 }
                 evidenceList.add(new ModuleEvidence(
-                        mod.module() != null ? mod.module() : key,
+                        mod.module() != null ? mod.module() : "unknown",
                         mod.status() != null ? mod.status() : "USED",
                         direction,
                         mod.effectiveWeight() != null ? mod.effectiveWeight() : 0.0,
                         mod.metadata()
                 ));
-            });
+            }
             analysisRepository.saveEvidence(callId, evidenceList, conflict);
         }
 
